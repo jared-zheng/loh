@@ -1,0 +1,122 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hm;hxx;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>h;rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Packet Files">
+      <UniqueIdentifier>{3E072BB4-9D82-4C87-8F1D-C4853B98E5E3}</UniqueIdentifier>
+      <Extensions>h;hpp;hm;hxx;inl;inc;xsd;cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="GateServer\stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\packet\packet.cpp">
+      <Filter>Packet Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerConfig.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GateServer\GateServer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GateServer\GateServerImp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GateServer\GateRoutine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GateServer\stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GateServer\resource.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GateServer\targetver.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\packet\commonpacket.h">
+      <Filter>Packet Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\packet\datadef.h">
+      <Filter>Packet Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\packet\packet.h">
+      <Filter>Packet Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\packet\servermap.h">
+      <Filter>Packet Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\packet\serversort.h">
+      <Filter>Packet Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ServerConfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonServer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonServer.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GateServer\GateServerImp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\packet\gamedbpacket.h">
+      <Filter>Packet Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\packet\gamepacket.h">
+      <Filter>Packet Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\packet\gatepacket.h">
+      <Filter>Packet Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GateServer\GateRoutine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonRoutine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="GateServer\resource.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\packet\commonpacket.inl">
+      <Filter>Packet Files</Filter>
+    </None>
+    <None Include="..\packet\packet.inl">
+      <Filter>Packet Files</Filter>
+    </None>
+    <None Include="..\packet\servermap.inl">
+      <Filter>Packet Files</Filter>
+    </None>
+    <None Include="..\packet\serversort.inl">
+      <Filter>Packet Files</Filter>
+    </None>
+    <None Include="..\packet\gamedbpacket.inl">
+      <Filter>Packet Files</Filter>
+    </None>
+    <None Include="..\packet\gamepacket.inl">
+      <Filter>Packet Files</Filter>
+    </None>
+    <None Include="..\packet\gatepacket.inl">
+      <Filter>Packet Files</Filter>
+    </None>
+  </ItemGroup>
+</Project>

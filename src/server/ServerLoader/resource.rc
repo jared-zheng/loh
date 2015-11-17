@@ -1,0 +1,314 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef APSTUDIO_INVOKED
+#include "targetver.h"
+#endif
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Chinese (P.R.C.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""targetver.h""\r\n"
+    "#endif\r\n"
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Toolbar
+//
+
+IDC_TOOLBAR   TOOLBAR  32, 32
+BEGIN
+    BUTTON      IDC_START
+    BUTTON      IDC_PAUSE
+    BUTTON      IDC_STOP
+    SEPARATOR
+    BUTTON      IDC_UPDATE
+    BUTTON      IDC_EXIT
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDC_TOOLBAR                BITMAP                  "cmd.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+IDD_CENTER DIALOGEX 0, 0, 400, 256
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "Listen Select:",IDC_SELECT_ADDR,0,0,180,12
+    LTEXT           "Listen Login:",IDC_LOGIN_ADDR,184,0,180,12
+    LTEXT           "Listen Game:",IDC_GAME_ADDR,368,0,180,12
+    LTEXT           "Servers Info",IDC_CENTER_INFO,0,16,380,12
+    CONTROL         "",IDD_SELECT,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,0,32,100,100
+    CONTROL         "",IDD_LOGIN,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,0,120,100,100
+    CONTROL         "",IDD_GAME,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,0,224,100,100
+END
+
+IDD_SELECT DIALOGEX 0, 0, 400, 256
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+LTEXT           "Connect Center:", IDC_CONNECT_CENTER, 0, 0, 180, 12
+LTEXT           "UDP Service:", IDC_UDP_SERVICE, 274, 0, 180, 12
+LTEXT           "Servers Info", IDC_SELECT_INFO, 0, 16, 380, 12
+CONTROL         "", IDD_LOGIN, "SysListView32", LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 0, 32, 100, 100
+END
+
+IDD_LOGINDB DIALOGEX 0, 0, 400, 256
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+LTEXT           "Listen Login:", IDC_LOGIN_ADDR, 0, 0, 180, 12
+LTEXT           "Servers Info", IDC_LOGINDB_INFO, 0, 16, 380, 12
+CONTROL         "", IDD_LOGIN, "SysListView32", LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 0, 32, 100, 100
+END
+
+IDD_LOGIN DIALOGEX 0, 0, 400, 256
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+LTEXT           "Connect Center:", IDC_CONNECT_CENTER, 0, 0, 180, 12
+LTEXT           "Connect LoginDB:", IDC_CONNECT_LOGINDB, 274, 0, 180, 12
+LTEXT           "TCP Service:", IDC_TCP_SERVICE, 0, 16, 180, 12
+LTEXT           "UDP Game:", IDC_UDP_SERVICE, 274, 16, 180, 12
+LTEXT           "Servers Info", IDC_LOGIN_INFO, 0, 32, 380, 12
+CONTROL         "", IDD_GAME, "SysListView32", LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 0, 32, 100, 100
+END
+
+IDD_GAMEDB DIALOGEX 0, 0, 400, 256
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+LTEXT           "Listen Game:", IDC_GAME_ADDR, 0, 0, 180, 12
+LTEXT           "Listen Gate:", IDC_GATE_ADDR, 274, 0, 180, 12
+LTEXT           "Servers Info", IDC_GAMEDB_INFO, 0, 16, 380, 12
+CONTROL         "", IDD_GAME, "SysListView32", LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 0, 32, 100, 100
+CONTROL         "", IDD_GATE, "SysListView32", LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 0, 120, 100, 100
+END
+
+IDD_GAME DIALOGEX 0, 0, 400, 256
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+LTEXT           "Connect Center:", IDC_CONNECT_CENTER, 0, 0, 180, 12
+LTEXT           "Connect GameDB:", IDC_CONNECT_GAMEDB, 274, 0, 180, 12
+LTEXT           "Listen Zone:", IDC_ZONE_ADDR, 0, 16, 180, 12
+LTEXT           "Listen Gate:", IDC_GATE_ADDR, 184, 16, 180, 12
+LTEXT           "UDP Login:", IDC_UDP_SERVICE, 368, 16, 180, 12
+LTEXT           "Servers Info", IDC_GAME_INFO, 0, 32, 380, 12
+CONTROL         "", IDD_ZONE, "SysListView32", LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 0, 32, 100, 100
+CONTROL         "", IDD_GATE, "SysListView32", LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 0, 120, 100, 100
+END
+
+IDD_ZONE DIALOGEX 0, 0, 400, 256
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+LTEXT           "Connect Game:", IDC_CONNECT_GAME, 0, 0, 180, 12
+LTEXT           "Servers Info", IDC_ZONE_INFO, 0, 16, 380, 12
+CONTROL         "", IDD_ZONE, "SysListView32", LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 0, 32, 100, 100
+END
+
+IDD_GATE DIALOGEX 0, 0, 400, 256
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+LTEXT           "Connect GameDB:", IDC_CONNECT_GAMEDB, 0, 0, 180, 12
+LTEXT           "Connect Game:", IDC_CONNECT_GAME, 274, 0, 180, 12
+LTEXT           "TCP Service:", IDC_TCP_SERVICE, 0, 16, 180, 12
+LTEXT           "UDP Login:", IDC_UDP_SERVICE, 274, 16, 180, 12
+LTEXT           "Servers Info", IDC_GATE_INFO, 0, 16, 380, 12
+CONTROL         "", IDD_GATE, "SysListView32", LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 0, 32, 100, 100
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+STRINGTABLE 
+BEGIN
+    IDD_CENTER				"中心服务器"
+    IDD_SELECT				"选择服务器"
+    IDD_LOGINDB				"登陆DB服务器"
+	IDD_LOGIN				"登陆服务器"
+    IDD_GAMEDB				"游戏DB服务器"
+	IDD_GAME				"游戏服务器"
+	IDD_ZONE				"地图服务器"
+	IDD_GATE				"网关服务器"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_CENTER_ID			"服务器平台"
+	IDS_SELECT_ID			"选择ID"
+	IDS_LOGIN_ID			"登陆ID"
+	IDS_GAME_ID				"游戏ID"
+	IDS_ZONE_ID				"地图ID"
+	IDS_GATE_ID				"网关ID"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_ALL_COUNT			"累计连接数"
+    IDS_ONLINE_COUNT		"总共在线数"
+    IDS_BUSY_PER			"负载百分比"
+    IDS_TCP_SERVICE			"外部TCP服务"
+    IDS_UDP_SERVICE			"外部UDP服务"
+    IDS_CONNECT_CENTER		"内部连接中心"
+    IDS_CONNECT_LOGINDB		"内部连接登陆DB"
+    IDS_CONNECT_GAMEDB		"内部连接游戏DB"
+    IDS_CONNECT_GAME		"内部连接游戏"
+    IDS_LISTEN_LOGIN		"内部UDP登陆"
+    IDS_LISTEN_GAME			"内部UDP游戏"
+    IDS_LISTEN_GATE			"内部监听网关"
+    IDS_LISTEN_ZONE			"内部监听地图"
+	IDS_SHARE_CENTER		"与中心同进程"
+	IDS_SHARE_LOGINDB		"与登陆DB同进程"
+	IDS_SHARE_GAMEDB		"与游戏DB同进程"
+	IDS_SHARE_GAME 			"与游戏同进程"
+END
+
+STRINGTABLE 
+BEGIN
+    IDC_STATUSBAR			"启动时间%d-%02d-%02d %02d:%02d:%02d"
+END
+
+STRINGTABLE 
+BEGIN
+    IDC_SELECT_ADDR			"监听选择:"
+    IDC_LOGIN_ADDR			"监听登陆:"
+    IDC_GAME_ADDR			"监听游戏:"
+	IDC_ZONE_ADDR			"监听地图:"
+	IDC_GATE_ADDR			"监听网关:"
+	IDC_CONNECT_CENTER		"连接中心:"
+	IDC_CONNECT_LOGINDB		"连接登陆DB:"
+	IDC_CONNECT_GAMEDB		"连接游戏DB:"
+	IDC_CONNECT_GAME		"连接游戏:"
+	IDC_TCP_SERVICE			"TCP服务:"
+	IDC_UDP_SERVICE			"UDP服务:"
+END
+
+STRINGTABLE 
+BEGIN
+    IDC_CENTER_INFO         "[中心:在线=%u,总数=%u,负载=%d%%][选择:服务器=%u,在线=%u,总数=%u][登陆:服务器=%u,在线=%u,总数=%u][游戏:服务器数=%u,在线=%u,总数=%u]"
+    IDC_SELECT_INFO         "[UDP:总人数=%u][登陆:服务器=%u,在线=%u,总数=%u]"
+	IDC_LOGINDB_INFO        "[登陆DB:在线=%u,总数=%u,负载=%d%%]"
+	IDC_LOGIN_INFO          "[登陆:在线=%u,总数=%u,负载=%d%%][游戏:服务器数=%u,在线=%u,总数=%u]"
+	IDC_GAMEDB_INFO         "[游戏DB:在线=%u,总数=%u,负载=%d%%][游戏:服务器数=%u,在线=%u,总数=%u][网关:服务器数=%u,在线=%u,总数=%u]"
+	IDC_GAME_INFO           "[游戏:在线=%u,总数=%u,负载=%d%%][地图:服务器数=%u,在线=%u,总数=%u][网关:服务器数=%u,在线=%u,总数=%u]"
+	IDC_ZONE_INFO           "[地图:在线=%u,总数=%u,负载=%d%%]维护区域:"
+	IDC_GATE_INFO           "[网关:在线=%u,总数=%u,负载=%d%%]队列人数:%d, 选择角色:%d, 游戏进行:%d"
+END
+
+STRINGTABLE 
+BEGIN
+    IDC_START				"开始\n开始服务"
+    IDC_PAUSE				"暂停/继续\n暂停/继续服务"
+    IDC_STOP				"停止\n停止服务"
+    IDC_UPDATE				"更新\n更新配置文件, 重新加载参数"
+    IDC_EXIT				"退出\n退出程序"
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 2013,10,25,1
+ PRODUCTVERSION 1,0,0,2
+ FILEFLAGSMASK 0x17L
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080404b0"
+        BEGIN
+            VALUE "CompanyName", "LH Studio"
+            VALUE "FileDescription", "ServerLoader.exe"
+            VALUE "FileVersion", "2013,10,25,01"
+            VALUE "InternalName", "ServerLoader.exe"
+            VALUE "LegalCopyright", "Copyright(C) LH Studio. All Rights Reserved"
+            VALUE "OriginalFilename", "ServerLoader.exe"
+            VALUE "ProductName", "ServerLoader.exe"
+            VALUE "ProductVersion", "1, 0, 0, 2"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x804, 1200
+    END
+END
+
+#endif    // Chinese (P.R.C.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

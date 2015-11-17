@@ -1,0 +1,83 @@
+//{{NO_DEPENDENCIES}}
+// Microsoft Visual C++ generated include file.
+// Used by ServerLoader.rc
+//
+#define IDD_INDEXBASE        100
+#define IDD_CENTER           100
+#define IDD_SELECT           101
+#define IDD_LOGINDB          102
+#define IDD_LOGIN            103
+#define IDD_GAMEDB           104
+#define IDD_GAME             105
+#define IDD_ZONE             106
+#define IDD_GATE             107
+
+#define IDS_ID_BASE          200
+#define IDS_CENTER_ID        200
+#define IDS_SELECT_ID        201
+#define IDS_LOGINDB_ID       202
+#define IDS_LOGIN_ID         203
+#define IDS_GAMEDB_ID        204
+#define IDS_GAME_ID          205
+#define IDS_ZONE_ID          206
+#define IDS_GATE_ID          207
+
+#define IDS_ALL_COUNT        208
+#define IDS_ONLINE_COUNT     209
+#define IDS_BUSY_PER	     210
+#define IDS_TCP_SERVICE      211
+#define IDS_UDP_SERVICE      212
+#define IDS_CONNECT_CENTER   213
+#define IDS_CONNECT_LOGINDB  214
+#define IDS_CONNECT_GAMEDB   215
+#define IDS_CONNECT_GAME     216
+#define IDS_LISTEN_LOGIN     217
+#define IDS_LISTEN_GAME      218
+#define IDS_LISTEN_GATE      219
+#define IDS_LISTEN_ZONE      220
+#define IDS_SHARE_CENTER     221
+#define IDS_SHARE_LOGINDB    222
+#define IDS_SHARE_GAMEDB     223
+#define IDS_SHARE_GAME       224
+
+#define IDC_TOOLBAR          1000
+#define IDC_STATUSBAR        1001
+#define IDC_SERVERTAB        1002
+
+#define IDC_SELECT_ADDR      1010
+#define IDC_LOGIN_ADDR       1011
+#define IDC_GAME_ADDR        1012
+#define IDC_ZONE_ADDR        1013
+#define IDC_GATE_ADDR        1014
+#define IDC_CONNECT_CENTER   1015
+#define IDC_CONNECT_LOGINDB  1016
+#define IDC_CONNECT_GAMEDB   1017
+#define IDC_CONNECT_GAME     1018
+#define IDC_TCP_SERVICE      1019
+#define IDC_UDP_SERVICE      1020
+
+#define IDC_CENTER_INFO      1030
+#define IDC_SELECT_INFO      1031
+#define IDC_LOGINDB_INFO     1032
+#define IDC_LOGIN_INFO       1033
+#define IDC_GAMEDB_INFO      1034
+#define IDC_GAME_INFO        1035
+#define IDC_ZONE_INFO        1036
+#define IDC_GATE_INFO        1037
+
+#define IDC_START            32772
+#define IDC_PAUSE            32773
+#define IDC_STOP             32774
+#define IDC_UPDATE           32775
+#define IDC_EXIT             32776
+
+// Next default values for new objects
+//  
+#ifdef APSTUDIO_INVOKED
+#ifndef APSTUDIO_READONLY_SYMBOLS
+#define _APS_NEXT_RESOURCE_VALUE        100
+#define _APS_NEXT_COMMAND_VALUE         32772
+#define _APS_NEXT_CONTROL_VALUE         1000
+#define _APS_NEXT_SYMED_VALUE           110
+#endif
+#endif
