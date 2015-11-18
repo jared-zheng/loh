@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////
-//   The Legend of Heros                                        //
+//   The Legend of Heroes                                       //
 //   Copyright(C) LH Studio. All Rights Reserved                //
 //                                                              //
 //   Source File : GameServerImp.cpp                            //
