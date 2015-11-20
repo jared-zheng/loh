@@ -19,11 +19,11 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CGameDBDlg
 BEGIN_DLG_ID_WND_EXCHANGE( CGameDBDlg )
-DLG_ID_WND( IDC_GAME_ADDR,   m_ListenGame )
-DLG_ID_WND( IDC_GATE_ADDR,   m_ListenGate )
-DLG_ID_WND( IDC_GAMEDB_INFO, m_ServerInfo)
-DLG_ID_WND( IDD_GAME,        m_GameSvr )
-DLG_ID_WND( IDD_GATE,        m_GateSvr )
+DLG_ID_WND( IDC_LISTEN_GAME,   m_ListenGame )
+DLG_ID_WND( IDC_LISTEN_GATE,   m_ListenGate )
+DLG_ID_WND( IDC_GAMEDB_INFO,   m_ServerInfo )
+DLG_ID_WND( IDD_GAME,          m_GameSvr )
+DLG_ID_WND( IDD_GATE,          m_GateSvr )
 END_DLG_ID_WND_EXCHANGE( CXDlg )
 
 CGameDBDlg::CGameDBDlg(void)
@@ -56,10 +56,10 @@ LRESULT CGameDBDlg::OnInitDialog(void)
 	m_GateSvr.MoveWindow(0, rc.top, rc.right, lHeight);
 	//
 	CStringFix strTemp;
-	strTemp.Load(IDS_LISTEN_GAME);
+	strTemp.Load(IDC_LISTEN_GAME);
 	m_ListenGame.SetWindowText(*strTemp);
 
-	strTemp.Load(IDS_LISTEN_GAME);
+	strTemp.Load(IDC_LISTEN_GATE);
 	m_ListenGate.SetWindowText(*strTemp);
 	//
 	InitListViewItem(DATA_INDEX_GAME);
@@ -87,25 +87,31 @@ LRESULT CGameDBDlg::OnSize(WPARAM, LPARAM lParam, BOOL&)
 void CGameDBDlg::OnLive(bool bStart)
 {
 	CStringFix strTemp;
-	strTemp.Load(IDC_GAME_ADDR);
+	strTemp.Load(IDC_LISTEN_GAME);
 	
 	if (bStart){
-		Int        nPort = 0;
+		UShort     usPort = 0;
 		CStringKey strAddr;
 
-		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_GAMEDB, 0, strAddr, nPort);
-		strTemp.AppendFormat(TF("[%s]%d"), *strAddr, nPort);
+		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_GAMEDB, 0, strAddr, usPort);
+		strTemp.AppendFormat(TF("[%s]%d"), *strAddr, usPort);
 		m_ListenGame.SetWindowText(*strTemp);
 
-		strTemp.Load(IDC_GATE_ADDR);
-		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_GAMEDB, CServerConfig::CFG_DEFAULT_GATE, strAddr, nPort);
-		strTemp.AppendFormat(TF("[%s]%d"), *strAddr, nPort);
+		strTemp.Load(IDC_LISTEN_GATE);
+		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_GAMEDB, CServerConfig::CFG_DEFAULT_GATE, strAddr, usPort);
+		if (usPort > 0) {
+			strTemp.AppendFormat(TF("[%s]%d"), *strAddr, usPort);
+		}
+		else {
+			strAddr.Load(IDS_SHARE_LISTEN);
+			strTemp += strAddr;
+		}
 		m_ListenGate.SetWindowText(*strTemp);
 	}
 	else{
 		m_ListenGame.SetWindowText(*strTemp);
 
-		strTemp.Load(IDC_GATE_ADDR);
+		strTemp.Load(IDC_LISTEN_GATE);
 		m_ListenGate.SetWindowText(*strTemp);
 	}
 	m_ServerInfo.SetWindowText(TF(""));

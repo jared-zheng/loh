@@ -37,30 +37,26 @@ public:
 		CFG_DEFAULT_GAME       = 0x00000020,
 		CFG_DEFAULT_ZONE       = 0x00000040,
 		CFG_DEFAULT_GATE       = 0x00000080,
-		//CFG_DEFAULT_ALLSERVER  = 0x000000FF,
-		CFG_DEFAULT_ALLSERVER  = 0x000000BF, // 不包括ZoneServer
+		CFG_DEFAULT_ALLSERVER  = 0x000000FF,
 		CFG_DEFAULT_CONFIG     = 0x10000000,
 		// center
-		CFG_CENTER_SELECT_PORT = 11181,   // 中心服务器默认监听端口(选择)
-		CFG_CENTER_LOGIN_PORT  = 11182,   // 中心服务器默认监听端口(登陆)
-		CFG_CENTER_GAME_PORT   = 11183,   // 中心服务器默认监听端口(游戏)
+		CFG_CENTER_SELECT_PORT = 11110,   // 中心服务器默认监听端口(选择)
+		CFG_CENTER_LOGIN_PORT  = 11111,   // 中心服务器默认监听端口(登陆)
+		CFG_CENTER_GAME_PORT   = 11112,   // 中心服务器默认监听端口(游戏)
 		// select
-		CFG_SELECT_PORT        = 10081,   // 选择服务器默认UDP端口(客户端)
+		CFG_SELECT_PORT        = 10010,   // 选择服务器默认UDP端口(客户端)
 		// logindb
-		CFG_LOGINDB_PORT       = 11184,   // 登陆DB服务器默认监听端口(登陆)
+		CFG_LOGINDB_PORT       = 11120,   // 登陆DB服务器默认监听端口(登陆)
 		// login
-		CFG_LOGIN_GAME_PORT    = 11185,   // 登陆服务器默认UDP端口(游戏) 
-		CFG_LOGIN_PORT         = 10082,   // 登陆服务器默认监听客户端端口(客户端)  
+		CFG_LOGIN_PORT         = 10020,   // 登陆服务器默认监听客户端端口(客户端)  
 		// gamedb
-		CFG_GAMEDB_GAME_PORT   = 11186,   // 游戏DB服务器默认监听端口(游戏)
-		CFG_GAMEDB_GATE_PORT   = 11187,   // 游戏DB服务器默认监听端口(网关)
+		CFG_GAMEDB_GAME_PORT   = 11130,   // 游戏DB服务器默认监听端口(游戏)
+		CFG_GAMEDB_GATE_PORT   = 11131,   // 游戏DB服务器默认监听端口(网关)
 		// game
-		CFG_GAME_LOGN_PORT     = 11188,   // 游戏服务器默认UDP监听端口(登陆)
-		CFG_GAME_ZONE_PORT     = 11189,   // 游戏服务器默认监听端口(地图)
-		CFG_GAME_GATE_PORT     = 11190,   // 游戏服务器默认监听端口(网关)
+		CFG_GAME_ZONE_PORT     = 11140,   // 游戏服务器默认监听端口(地图)
+		CFG_GAME_GATE_PORT     = 11141,   // 游戏服务器默认监听端口(网关)
 		// gate
-		CFG_GATE_LOGN_PORT     = 11191,   // 网关服务器默认UDP监听端口(登陆)
-		CFG_GATE_PORT          = 10083,   // 网关服务器默认监听端口(客户端)
+		CFG_GATE_PORT          = 10030,   // 网关服务器默认监听端口(客户端)
 		// update
 		CFG_UPDATE_MIN_TIME    = 16,      // 最小同步更新周期
 		CFG_UPDATE_DEF_TIME    = 30,      // 同步更新周期默认30秒
@@ -140,7 +136,7 @@ public:
 	Int    GetLoadServers(void);
 
 	bool   GetServerPath(Int nServer, CStringFix& strPath);
-	bool   GetServerAddr(Int nServer, Int nServerAddr, CStringKey& strAddr, Int& nPort);
+	bool   GetServerAddr(Int nServer, Int nServerAddr, CStringKey& strAddr, UShort& usPort);
 
 	UShort GetServerId(Int nServer);
 	UShort GetServerIncr(Int nServer);
@@ -253,6 +249,7 @@ public:
 	CStringKey   m_strGameServerLoginAddr;    // 游戏服务器监听登陆UDP地址
 	CStringKey   m_strGameServerZoneAddr;     // 游戏服务器监听地图地址
 	CStringKey   m_strGameServerGateAddr;     // 游戏服务器监听网关地址
+	CStringKey   m_strGameServerPingAddr;     // 游戏服务器PING地址
 	CStringFix   m_strGameServerExtConfig;
 	// zone-server
 	CStringKey   m_strZoneServerGameAddr;     // 地图服务器连接中心地址
@@ -294,7 +291,7 @@ INLINE CServerConfig::CServerConfig(void)
 , m_nLoginDBServerQueue(1)
 , m_nLoginServerCenterPort(0)
 , m_nLoginServerLoginDBPort(0)
-, m_nLoginServerGamePort(CFG_LOGIN_GAME_PORT)
+, m_nLoginServerGamePort(0)
 , m_nLoginServerClientPort(CFG_LOGIN_PORT)
 , m_nLoginServerId(DATA_INDEX_LOGIN)
 , m_nLoginServerIncr(CFG_BUSY_DEF_INCREMENT)
@@ -305,7 +302,7 @@ INLINE CServerConfig::CServerConfig(void)
 , m_nGameDBServerQueue(1)
 , m_nGameServerCenterPort(0)
 , m_nGameServerGameDBPort(0)
-, m_nGameServerLoginPort(CFG_GAME_LOGN_PORT)
+, m_nGameServerLoginPort(0)
 , m_nGameServerZonePort(CFG_GAME_ZONE_PORT)
 , m_nGameServerGatePort(CFG_GAME_GATE_PORT)
 , m_nGameServerId(DATA_INDEX_GAME)
@@ -315,7 +312,7 @@ INLINE CServerConfig::CServerConfig(void)
 , m_nZoneServerIncr(CFG_BUSY_DEF_INCREMENT)
 , m_nGateServerGameDBPort(0)
 , m_nGateServerGamePort(0)
-, m_nGateServerLoginPort(CFG_GATE_LOGN_PORT)
+, m_nGateServerLoginPort(0)
 , m_nGateServerClientPort(CFG_GATE_PORT)
 , m_nGateServerId(DATA_INDEX_GATE)
 , m_nGateServerIncr(CFG_BUSY_DEF_INCREMENT)
@@ -343,6 +340,7 @@ INLINE CServerConfig::CServerConfig(void)
 , m_strGameServerLoginAddr(LocalHost)
 , m_strGameServerZoneAddr(LocalHost)
 , m_strGameServerGateAddr(LocalHost)
+, m_strGameServerPingAddr(LocalHost)
 , m_strZoneServerGameAddr(LocalHost)
 , m_strGateServerGameDBAddr(LocalHost)
 , m_strGateServerGameAddr(LocalHost)
@@ -383,7 +381,7 @@ INLINE CServerConfig::CServerConfig(const CServerConfig&)
 , m_nLoginDBServerQueue(1)
 , m_nLoginServerCenterPort(0)
 , m_nLoginServerLoginDBPort(0)
-, m_nLoginServerGamePort(CFG_LOGIN_GAME_PORT)
+, m_nLoginServerGamePort(0)
 , m_nLoginServerClientPort(CFG_LOGIN_PORT)
 , m_nLoginServerId(DATA_INDEX_LOGIN)
 , m_nLoginServerIncr(CFG_BUSY_DEF_INCREMENT)
@@ -394,7 +392,7 @@ INLINE CServerConfig::CServerConfig(const CServerConfig&)
 , m_nGameDBServerQueue(1)
 , m_nGameServerCenterPort(0)
 , m_nGameServerGameDBPort(0)
-, m_nGameServerLoginPort(CFG_GAME_LOGN_PORT)
+, m_nGameServerLoginPort(0)
 , m_nGameServerZonePort(CFG_GAME_ZONE_PORT)
 , m_nGameServerGatePort(CFG_GAME_GATE_PORT)
 , m_nGameServerId(DATA_INDEX_GAME)
@@ -404,7 +402,7 @@ INLINE CServerConfig::CServerConfig(const CServerConfig&)
 , m_nZoneServerIncr(CFG_BUSY_DEF_INCREMENT)
 , m_nGateServerGameDBPort(0)
 , m_nGateServerGamePort(0)
-, m_nGateServerLoginPort(CFG_GATE_LOGN_PORT)
+, m_nGateServerLoginPort(0)
 , m_nGateServerClientPort(CFG_GATE_PORT)
 , m_nGateServerId(DATA_INDEX_GATE)
 , m_nGateServerIncr(CFG_BUSY_DEF_INCREMENT)
@@ -432,6 +430,7 @@ INLINE CServerConfig::CServerConfig(const CServerConfig&)
 , m_strGameServerLoginAddr(LocalHost)
 , m_strGameServerZoneAddr(LocalHost)
 , m_strGameServerGateAddr(LocalHost)
+, m_strGameServerPingAddr(LocalHost)
 , m_strZoneServerGameAddr(LocalHost)
 , m_strGateServerGameDBAddr(LocalHost)
 , m_strGateServerGameAddr(LocalHost)

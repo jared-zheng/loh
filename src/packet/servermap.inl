@@ -55,15 +55,15 @@ INLINE void tagSERVER_INFO::Copy(const tagSERVER_DATA& sd)
 		usStatus  = STATUSU_SYNC;
 	}
 }
-
+// 统计同类型服务器的客户端总连接数&在线数在一台服务器连接的增加情况
 INLINE void tagSERVER_INFO::Incr(const tagSERVER_DATA& sd)
 {
 	uAllCount += sd.uAllCount;
 	uOnline   += sd.uOnline;
-	++usBusy;
+	++usBusy; // 表示同类型服务器数量
 	usStatus = STATUSU_SYNC;
 }
-
+// 统计同类型服务器的客户端总连接数&在线数新数据sdIncr和旧数据sdDecr的差值
 INLINE void tagSERVER_INFO::Diff(const tagSERVER_DATA& sdIncr, const tagSERVER_DATA& sdDecr)
 {
 	uAllCount += sdIncr.uAllCount;
@@ -82,7 +82,7 @@ INLINE void tagSERVER_INFO::Diff(const tagSERVER_DATA& sdIncr, const tagSERVER_D
 	}
 	usStatus = STATUSU_SYNC;
 }
-
+// 统计同类型服务器的客户端总连接数&在线数在一台服务器断开的减少情况
 INLINE void tagSERVER_INFO::Decr(const tagSERVER_DATA& sd)
 {
 	if (uAllCount > sd.uAllCount) {
@@ -98,29 +98,11 @@ INLINE void tagSERVER_INFO::Decr(const tagSERVER_DATA& sd)
 		uOnline = 0;
 	}
 	if (usBusy > 0) {
-		--usBusy;
+		--usBusy; // 表示同类型服务器数量
 	}
 	usStatus = STATUSU_SYNC;
 }
-
-INLINE void tagSERVER_INFO::Drop(const tagSERVER_DATA& sd)
-{
-	if (uOnline > (UInt)sd.usBusy) {
-		uOnline -= sd.usBusy;
-	}
-	else {
-		uOnline = 0;
-	}
-	UShort usDrop = sd.usBusy * usIncr;
-	if (usBusy > usDrop) {
-		usBusy -= usDrop;
-	}
-	else {
-		usBusy = 0;
-	}
-	usStatus = STATUSU_SYNC;
-}
-
+// 服务器客户端连接增加统计人数
 INLINE void tagSERVER_INFO::Incr(void)
 {
 	++uAllCount;
@@ -132,7 +114,7 @@ INLINE void tagSERVER_INFO::Incr(void)
 	}
 	usStatus = STATUSU_SYNC;
 }
-
+// 服务器客户端断开减少统计人数
 INLINE void tagSERVER_INFO::Decr(void)
 {
 	if (uOnline > 0) {
@@ -159,6 +141,25 @@ INLINE void tagSERVER_INFO::Reset(void)
 	memset(this, 0, sizeof(tagSERVER_INFO));
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// tagSERVER_NOADDR : 不包含地址的服务器信息结构定义
+INLINE tagSERVER_NOADDR::tagSERVER_NOADDR(void)
+//: lRefCount(1)
+{
+}
+
+INLINE tagSERVER_NOADDR::~tagSERVER_NOADDR(void)
+{
+}
+
+INLINE Int tagSERVER_NOADDR::AddrLen(void)
+{
+	return 0;
+}
+
+INLINE void tagSERVER_NOADDR::Addr(CStream&, Int)
+{
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // tagSERVER_ADDR : 包含地址的服务器信息结构定义
 template <size_t stLen>
 INLINE tagSERVER_ADDR<stLen>::tagSERVER_ADDR(void)
@@ -172,14 +173,28 @@ INLINE tagSERVER_ADDR<stLen>::~tagSERVER_ADDR(void)
 }
 
 template <size_t stLen>
+INLINE Int tagSERVER_ADDR<stLen>::AddrLen(void)
+{
+	return (Int)stLen;
+}
+
+template <size_t stLen>
 INLINE void tagSERVER_ADDR<stLen>::Addr(CStream& Stream, Int nStatus)
 {
-	if ((nStatus & STATUSU_NOADDR) == 0) {
+	if ((nStatus & STATUSU_PING) == 0) {
 		if (Stream.IsRead()) {
 			Stream.Read(NetAddr, sizeof(NetAddr));
 		}
 		else {
 			Stream.Write(NetAddr, sizeof(NetAddr));
+		}
+	}
+	else {// gameserver only STATUSU_PING
+		if (Stream.IsRead()) {
+			Stream.Read(NetAddr, sizeof(CNETTraits::NET_ADDR));
+		}
+		else {
+			Stream.Write(NetAddr, sizeof(CNETTraits::NET_ADDR));
 		}
 	}
 }
@@ -193,21 +208,6 @@ INLINE tagZONE_ADDR_INDEX::~tagZONE_ADDR_INDEX(void)
 {
 	assert(Index.GetSize() == 0);
 }
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// tagSERVER_NOADDR : 不包含地址的服务器信息结构定义
-INLINE tagSERVER_NOADDR::tagSERVER_NOADDR(void)
-//: lRefCount(1)
-{
-}
-
-INLINE tagSERVER_NOADDR::~tagSERVER_NOADDR(void)
-{
-}
-
-INLINE void tagSERVER_NOADDR::Addr(CStream&, Int)
-{
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // tagSERVER_MAP : 服务器信息映射表结构定义
 template <typename V>
@@ -232,11 +232,11 @@ INLINE void tagSERVER_MAP<V>::Update(void)
 	PINDEX index = m_SvrMap.GetFirstIndex();
 	while (index != nullptr) {
 		SVR_MAP_PAIR* pPair = m_SvrMap.GetNext(index);
-		if ((pPair->m_V.usStatus == STATUSU_SYNC) || (pPair->m_V.usStatus == STATUSU_LINK)) {
+		if (pPair->m_V.usStatus & (STATUSU_SYNC | STATUSU_LINK)) {
 			DEV_DUMP(TF("Update change okay %llx"), pPair->m_K);
 			pPair->m_V.usStatus = STATUSU_OKAY;
 		}
-		else if (pPair->m_V.usStatus == STATUSU_UNLINK) {
+		else if (pPair->m_V.usStatus & STATUSU_UNLINK) {
 			DEV_DUMP(TF("Update remove unlink %llx"), pPair->m_K);
 			m_SvrMap.RemoveAt(reinterpret_cast<PINDEX>(pPair));
 		}

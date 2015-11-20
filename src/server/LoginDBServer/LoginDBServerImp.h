@@ -33,9 +33,6 @@ class CLoginDBServer : public ICommonServer, public CPAKHandler
 public:
 	CLoginDBServer(void);
 	virtual ~CLoginDBServer(void);
-	// CTRefCount
-	//virtual Long   AddRef(void) OVERRIDE;
-	virtual Long   Release(void) OVERRIDE;
 	// CComponent
 	// Command to set param value
 	virtual UInt   Command(PCXStr pszCMD, uintptr_t utParam) OVERRIDE;
@@ -140,15 +137,6 @@ INLINE CLoginDBServer::CLoginDBServer(const CLoginDBServer&)
 INLINE CLoginDBServer& CLoginDBServer::operator=(const CLoginDBServer&)
 {
 	return (*this);
-}
-
-INLINE Long CLoginDBServer::Release(void)
-{
-	Long lRef = m_Counter.Reset();
-	if (lRef == 0) {
-		MDELETE this;
-	}
-	return lRef;
 }
 
 INLINE bool CLoginDBServer::OnShareRoutine(Int, uintptr_t, LLong, CEventQueue::EVENT_TYPE)

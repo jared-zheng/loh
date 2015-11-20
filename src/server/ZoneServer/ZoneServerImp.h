@@ -30,9 +30,6 @@ class CZoneServer : public ICommonServer, public CPAKHandler
 public:
 	CZoneServer(void);
 	virtual ~CZoneServer(void);
-	// CTRefCount
-	//virtual Long   AddRef(void) OVERRIDE;
-	virtual Long   Release(void) OVERRIDE;
 	// CComponent
 	// Command to set param value
 	virtual UInt   Command(PCXStr pszCMD, uintptr_t utParam) OVERRIDE;
@@ -127,15 +124,6 @@ INLINE CZoneServer::CZoneServer(const CZoneServer&)
 INLINE CZoneServer& CZoneServer::operator=(const CZoneServer&)
 {
 	return (*this);
-}
-
-INLINE Long CZoneServer::Release(void)
-{
-	Long lRef = m_Counter.Reset();
-	if (lRef == 0) {
-		MDELETE this;
-	}
-	return lRef;
 }
 
 INLINE bool CZoneServer::OnTcpAccept(KeyRef, KeyRef)

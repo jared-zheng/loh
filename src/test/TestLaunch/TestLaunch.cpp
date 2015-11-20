@@ -129,14 +129,17 @@ void CTestSelGameDlg::Sync(CLoginSync* pSync)
 LRESULT CTestSelGameDlg::OnInitDialog(void)
 {
 	m_xuiGameSvr.SetExtendedStyle(LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES);
-	m_xuiGameSvr.AddColumn(TF("服务器Id"),  0, 120, -1, LVCF_WIDTH|LVCF_TEXT); // 按Id可以转换成名称
+	m_xuiGameSvr.AddColumn(TF("服务器标识"), 0, 120, -1, LVCF_WIDTH|LVCF_TEXT); // 按Id可以转换成名称
 	m_xuiGameSvr.AddColumn(TF("总共连接数"), 1, 90,  -1, LVCF_WIDTH|LVCF_TEXT);
 	m_xuiGameSvr.AddColumn(TF("在线连接数"), 2, 90,  -1, LVCF_WIDTH|LVCF_TEXT);
 	m_xuiGameSvr.AddColumn(TF("负载百分比"), 3, 90,  -1, LVCF_WIDTH|LVCF_TEXT);
+	m_xuiGameSvr.AddColumn(TF("地址"),       4, 120,  -1, LVCF_WIDTH|LVCF_TEXT);
+	m_xuiGameSvr.AddColumn(TF("PING"),      5, 60,  -1, LVCF_WIDTH|LVCF_TEXT);
 	{
 		CSyncLockWaitScope scope(m_ServerMap.GetLock());
 		Update();
 	}
+	// 开启PING线程测试PING值, 更新界面
 	return TRUE;
 }
 
@@ -156,7 +159,7 @@ LRESULT CTestSelGameDlg::OnOk(WORD, WORD, HWND, BOOL& bHandled)
 void CTestSelGameDlg::Update(void)
 {
 	for (PINDEX index = m_ServerMap.First(); index != nullptr; ) {
-		SVR_SERVER_MAP::SVR_MAP_PAIR* pPair = m_ServerMap.Next(index);
+		SVR_TEST_MAP::SVR_MAP_PAIR* pPair = m_ServerMap.Next(index);
 
 		LVFINDINFO find = { 0 };
 		find.flags  = LVFI_PARAM;
@@ -174,20 +177,26 @@ void CTestSelGameDlg::Update(void)
 				Update(nIndex, pPair->m_V);
 			}
 			else {
-				Link(pPair->m_K, pPair->m_V);
+				Link(pPair->m_K, pPair->m_V, pPair->m_V.NetAddr);
 			}
 			pPair->m_V.usStatus = STATUSU_OKAY;
 		}
 	}
 }
 
-void CTestSelGameDlg::Link(DataRef drKey, SERVER_DATA& sd)
+void CTestSelGameDlg::Link(DataRef drKey, SERVER_DATA& sd, CNETTraits::NET_ADDR* pAddr)
 {
 	CStringFix strTemp;
 	strTemp.ToString((ULong)sd.usId); // 按Id可以转换成名称
 	Int nIndex = m_xuiGameSvr.InsertItem(LMT_MAX, *strTemp);
 	if (nIndex >= 0) {
 		Update(nIndex, sd);
+
+		CStringKey strAddr;
+		UShort     usPort = 0;
+		GTestSystemInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pAddr, false);
+		m_xuiGameSvr.SetItemText(nIndex, 4, *strAddr);
+
 		m_xuiGameSvr.SetItemData(nIndex, (uintptr_t)drKey);
 		if ((Int)sd.usId == m_nGameId) {
 			m_xuiGameSvr.SelectItem(nIndex);

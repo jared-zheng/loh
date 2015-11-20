@@ -40,9 +40,6 @@ public:
 public:
 	CCenterServer(void);
 	virtual ~CCenterServer(void);
-	// CTRefCount
-	//virtual Long   AddRef(void) OVERRIDE;
-	virtual Long   Release(void) OVERRIDE;
 	// CComponent
 	// Command to set param value
 	virtual UInt   Command(PCXStr pszCMD, uintptr_t utParam) OVERRIDE;
@@ -81,7 +78,7 @@ private:
 	// 运行创建监听选择, 登陆和游戏服务器连接的连接对象
 	bool  StartListenServers(void);
 	// 运行创建监听服务器的连接
-	bool  StartListenServer(KeyRef& krListen, const CStringKey& strAddr, Int nPort);
+	bool  StartListenServer(KeyRef& krListen, const CStringKey& strAddr, UShort usPort);
 
 	// 停止监听服务器连接
 	void  StopListenServers(void);
@@ -175,15 +172,6 @@ INLINE CCenterServer::CCenterServer(const CCenterServer&)
 INLINE CCenterServer& CCenterServer::operator=(const CCenterServer&)
 {
 	return (*this);
-}
-
-INLINE Long CCenterServer::Release(void)
-{
-	Long lRef = m_Counter.Reset();
-	if (lRef == 0) {
-		MDELETE this;
-	}
-	return lRef;
 }
 
 INLINE bool CCenterServer::OnShareRoutine(Int, uintptr_t, LLong, CEventQueue::EVENT_TYPE)

@@ -80,7 +80,7 @@ typedef   HWND                                      WndRef, *PWndRef;
 	#else  // RUNTIME_DEBUG
 		#define CORE_MODULE_NAME                    TF("core.dll")
 		#define NETWORK_MODULE_NAME                 TF("network.dll")
-		#define XUI_MODULE_NAME                     TF("xuiD.dll")
+		#define XUI_MODULE_NAME                     TF("xui.dll")
 	#endif // RUNTIME_DEBUG
 #endif // RUNTIME_STATIC
 

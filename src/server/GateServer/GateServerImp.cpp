@@ -88,33 +88,23 @@ bool CGateServer::InitLoadConfig(void)
 	m_ServerInfo.usIncr = m_pConfig->GetServerIncr(CServerConfig::CFG_DEFAULT_GATE);
 	LOGV_INFO(m_FileLog, TF("[网关服务器]从配置对象读取服务器Id=%d, Incr=%d!"), m_ServerInfo.usId, m_ServerInfo.usIncr);
 	if (m_pConfig->GetNetworkAttr() & ATTR_IPV6) {
-		m_ServerInfo.NetAddr[GATEI_TCP].usAttr         = ATTR_IPV6;
-		m_ServerInfo.NetAddr[GATEI_UDP].usAttr         = ATTR_IPV6;
-		m_ServerInfo.NetAddr[GATEI_GAME].usAttr        = ATTR_IPV6;
-		m_ServerInfo.NetAddr[GATEI_GAMEDB].usAttr      = ATTR_IPV6;
-		m_ServerInfo.NetAddr[GATEI_GAMEDB_ADDR].usAttr = ATTR_IPV6;
+		m_ServerInfo.NetAddr[GATEI_TCP].usAttr    = ATTR_IPV6;
+		m_ServerInfo.NetAddr[GATEI_UDP].usAttr    = ATTR_IPV6;
+		m_ServerInfo.NetAddr[GATEI_GAMEDB].usAttr = ATTR_IPV6;
 	}
-	Int        nPort = 0;
+	UShort     usPort = 0;
 	CStringKey strAddr;
-	m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_GATE, 0, strAddr, nPort);
-	UShort     usPort = (UShort)nPort;
+	m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_GATE, 0, strAddr, usPort);
 	m_NetworkPtr->TranslateAddr(strAddr, usPort, m_ServerInfo.NetAddr[GATEI_TCP]); // tcp
 
-	m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_GATE, CServerConfig::CFG_DEFAULT_LOGIN, strAddr, nPort);
-	usPort = (UShort)nPort;
+	m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_GATE, CServerConfig::CFG_DEFAULT_LOGIN, strAddr, usPort);
 	m_NetworkPtr->TranslateAddr(strAddr, usPort, m_ServerInfo.NetAddr[GATEI_UDP]); // udp
 
-	m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_GATE, CServerConfig::CFG_DEFAULT_GAME, strAddr, nPort);
-	usPort = (UShort)nPort;
-	m_NetworkPtr->TranslateAddr(strAddr, usPort, m_ServerInfo.NetAddr[GATEI_GAME]); // connect game 
-
-	m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_GATE, CServerConfig::CFG_DEFAULT_GAMEDB, strAddr, nPort);
-	usPort = (UShort)nPort;
-	m_NetworkPtr->TranslateAddr(strAddr, usPort, m_ServerInfo.NetAddr[GATEI_GAMEDB]); // connect gamedb
-
-	m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_GAMEDB, CServerConfig::CFG_DEFAULT_GATE, strAddr, nPort);
-	usPort = (UShort)nPort;
-	m_NetworkPtr->TranslateAddr(strAddr, usPort, m_ServerInfo.NetAddr[GATEI_GAMEDB_ADDR]); // gamedb
+	m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_GAMEDB, CServerConfig::CFG_DEFAULT_GATE, strAddr, usPort);
+	if (usPort == 0) {
+		m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_GAMEDB, 0, strAddr, usPort);
+	}
+	m_NetworkPtr->TranslateAddr(strAddr, usPort, m_ServerInfo.NetAddr[GATEI_GAMEDB]); // gamedb
 
 	assert(m_GateRoutine == nullptr);
 	m_GateRoutine = (ICommonRoutine*)CRTTI::CreateByName(TF("CGateRoutine"));
@@ -164,9 +154,9 @@ bool CGateServer::Start(void)
 	if (m_nStatus == STATUSC_INIT) {
 		LOG_INFO(m_FileLog, TF("[网关服务器]网关服务启动开始!"));
 
-		if ((StartConnectGameDBServer() == false) ||
+		if ((StartUDPService() == false) || // 提前开启获取地址信息
+			(StartConnectGameDBServer() == false) ||
 			(StartConnectGameServer() == false) ||
-			(StartUDPService() == false) ||
 			(StartTCPService() == false)) {
 			return false;
 		}
@@ -183,12 +173,15 @@ bool CGateServer::StartConnectGameDBServer(void)
 	// 网关和游戏DB在不同进程,  需要连接内网游戏DB服务器
 	if ((m_pConfig->GetLoadServers() & CServerConfig::CFG_DEFAULT_GAMEDB) == 0) {
 		if (m_krConnectGameDB == nullptr) {
-			m_krConnectGameDB = m_NetworkPtr->Create(*this, m_ServerInfo.NetAddr[GATEI_GAMEDB]);
+			UShort     usPort = 0;
+			CStringKey strAddr;
+			m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_GATE, CServerConfig::CFG_DEFAULT_GAMEDB, strAddr, usPort);
+			m_krConnectGameDB = m_NetworkPtr->Create(*this, usPort, *strAddr);
 		}
 		if (m_krConnectGameDB != nullptr) {
 			if (m_bGameDBCnnted == false) {
 				LOG_INFO(m_FileLog, TF("[网关服务器]网关服务器和游戏DB服务器在不同进程, 创建连接游戏DB服务器Socket成功"));
-				if (m_NetworkPtr->Connect(m_krConnectGameDB, m_ServerInfo.NetAddr[GATEI_GAMEDB_ADDR]) == false)
+				if (m_NetworkPtr->Connect(m_krConnectGameDB, m_ServerInfo.NetAddr[GATEI_GAMEDB]) == false)
 				{
 					LOGV_ERROR(m_FileLog, TF("[网关服务器]连接游戏DB服务器请求失败"));
 					return false;
@@ -214,7 +207,6 @@ bool CGateServer::StartConnectGameDBServer(void)
 
 		LOG_INFO(m_FileLog, TF("[网关服务器]同进程直接连接游戏DB服务器"));
 		m_ServerInfo.usStatus = STATUSU_LINK;
-		m_ServerInfo.NetAddr[GATEI_GAMEDB].usPort = 0; // 0 == 同进程共享
 
 		CGateLink Link;
 		Link.SetServerData(m_ServerInfo);
@@ -235,19 +227,22 @@ bool CGateServer::StartConnectGameServer(void)
 	// 网关和游戏在不同进程,  需要连接内网中心服务器
 	if ((m_pConfig->GetLoadServers() & CServerConfig::CFG_DEFAULT_GAME) == 0) {
 		if (m_krConnectGame == nullptr) {
-			m_krConnectGame = m_NetworkPtr->Create(*this, m_ServerInfo.NetAddr[GATEI_GAME]);
+			UShort     usPort = 0;
+			CStringKey strAddr;
+			m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_GATE, CServerConfig::CFG_DEFAULT_GAME, strAddr, usPort);
+			m_krConnectGame = m_NetworkPtr->Create(*this, usPort, *strAddr);
 		}
 		if (m_krConnectGame != nullptr) {
 			if (m_bGameCnnted == false) {
 				LOG_INFO(m_FileLog, TF("[网关服务器]网关服务器和游戏服务器在不同进程, 创建连接游戏服务器Socket成功"));
-				Int         nPort = 0;
+				UShort      usPort = 0;
 				CStringKey  strAddr;
-				m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_GAME, 0, strAddr, nPort);
-				if (m_NetworkPtr->Connect(m_krConnectGame, (UShort)nPort, *strAddr) == false) {
-					LOGV_ERROR(m_FileLog, TF("[网关服务器]连接游戏服务器[%s]:%d请求失败"), *strAddr, nPort);
+				m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_GAME, CServerConfig::CFG_DEFAULT_GATE, strAddr, usPort);
+				if (m_NetworkPtr->Connect(m_krConnectGame, usPort, *strAddr) == false) {
+					LOGV_ERROR(m_FileLog, TF("[网关服务器]连接游戏服务器[%s]:%d请求失败"), *strAddr, usPort);
 					return false;
 				}
-				LOGV_INFO(m_FileLog, TF("[网关服务器]连接游戏服务器[%s]:%d请求完成"), *strAddr, nPort);
+				LOGV_INFO(m_FileLog, TF("[网关服务器]连接游戏服务器[%s]:%d请求完成"), *strAddr, usPort);
 			}
 		}
 		else {
@@ -268,7 +263,6 @@ bool CGateServer::StartConnectGameServer(void)
 
 		LOG_INFO(m_FileLog, TF("[网关服务器]同进程直接连接中心服务器"));
 		m_ServerInfo.usStatus = STATUSU_LINK;
-		m_ServerInfo.NetAddr[GATEI_GAME].usPort = 0; // 0 == 同进程共享
 
 		CGateLink Link;
 		Link.SetServerData(m_ServerInfo);
@@ -290,13 +284,17 @@ bool CGateServer::StartUDPService(void)
 		m_krUDPService = m_NetworkPtr->Create(*this, m_ServerInfo.NetAddr[GATEI_UDP], SOCKET_UDP);
 		if (m_krUDPService != nullptr) {
 			LOGV_INFO(m_FileLog, TF("[网关服务器]创建UDP监听登陆服务器成功"));
+			if (m_ServerInfo.NetAddr[GATEI_UDP].usPort == 0) {
+				m_NetworkPtr->GetAddr(m_krUDPService, m_ServerInfo.NetAddr[GATEI_UDP], false);
+			}
+			m_pUIHandler->OnHandle(PAK_EVENT_LINK, reinterpret_cast<uintptr_t>(m_ServerInfo.NetAddr + GATEI_UDP), DATA_INDEX_GATE);
 		}
 		else {
 			LOGV_ERROR(m_FileLog, TF("[网关服务器]创建UDP监听登陆服务器失败"));
 			return false;
 		}
 	}
-	return (m_krUDPService != nullptr);
+	return true;
 }
 // 运行创建TCP监听客户端连接对象
 bool CGateServer::StartTCPService(void)
@@ -337,13 +335,13 @@ bool CGateServer::Pause(bool bPause)
 //--------------------------------------
 void CGateServer::Stop(void)
 {
-	if (m_nStatus > STATUSC_INIT) {
+	if (m_nStatus > STATUSC_NONE) {
 		LOG_INFO(m_FileLog, TF("[网关服务器]网关服务停止开始!"));
 
 		m_GateRoutine->Stop();
 
-		StopTCPService();
 		StopUDPService();
+		StopTCPService();
 		StopConnectGameServer();
 		StopConnectGameDBServer();
 
@@ -514,7 +512,10 @@ bool CGateServer::DispatchGameServer(const PacketPtr& PktPtr, KeyRef krSocket)
 	case PAK_EVENT_LINKACK:
 		{
 			m_bGameLinked = true;
-			m_pUIHandler->OnHandle(PAK_EVENT_LINK, reinterpret_cast<uintptr_t>(m_ServerInfo.NetAddr + GATEI_GAME), DATA_INDEX_GAME);
+
+			NET_ADDR NetAddr;
+			m_NetworkPtr->GetAddr(krSocket, NetAddr, false);
+			m_pUIHandler->OnHandle(PAK_EVENT_LINK, reinterpret_cast<uintptr_t>(&NetAddr), DATA_INDEX_GAME);
 			LOG_INFO(m_FileLog, TF("[网关服务器]收到游戏服务器连接回复包"));
 		}
 		break;
@@ -589,7 +590,7 @@ bool CGateServer::OnTcpConnect(UInt uError, KeyRef krConnect)
 	if (krConnect == m_krConnectGameDB) {
 		m_bGameDBCnnted = (uError == 0);
 		if (m_bGameDBCnnted) {
-			m_NetworkPtr->GetAddr(krConnect, m_ServerInfo.NetAddr[GATEI_GAMEDB], false);
+			LinkGameDBServer();
 		}
 		else {
 			DEV_INFO(TF("[网关服务器]连接游戏DB服务器失败%X!"), uError);
@@ -599,17 +600,12 @@ bool CGateServer::OnTcpConnect(UInt uError, KeyRef krConnect)
 	else if (krConnect == m_krConnectGame) {
 		m_bGameCnnted = (uError == 0);
 		if (m_bGameCnnted) {
-			m_NetworkPtr->GetAddr(krConnect, m_ServerInfo.NetAddr[GATEI_GAME], false);
+			LinkGameServer();
 		}
 		else {
 			DEV_INFO(TF("[网关服务器]连接游戏服务器失败%X!"), uError);
 			LOGV_WARN(m_FileLog, TF("[网关服务器]连接游戏服务器失败%X!"), uError);
 		}
-	}
-
-	if (m_bGameDBCnnted && m_bGameCnnted) {
-		LinkGameDBServer();
-		LinkGameServer();
 	}
 	return true;
 }

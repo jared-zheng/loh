@@ -31,9 +31,6 @@ class CSelectServer : public ICommonServer, public CPAKHandler
 public:
 	CSelectServer(void);
 	virtual ~CSelectServer(void);
-	// CTRefCount
-	//virtual Long   AddRef(void) OVERRIDE;
-	virtual Long   Release(void) OVERRIDE;
 	// CComponent
 	// Command to set param value
 	virtual UInt   Command(PCXStr pszCMD, uintptr_t utParam) OVERRIDE;
@@ -152,15 +149,6 @@ INLINE CSelectServer::CSelectServer(const CSelectServer&)
 INLINE CSelectServer& CSelectServer::operator=(const CSelectServer&)
 {
 	return (*this);
-}
-
-INLINE Long CSelectServer::Release(void)
-{
-	Long lRef = m_Counter.Reset();
-	if (lRef == 0) {
-		MDELETE this;
-	}
-	return lRef;
 }
 
 INLINE bool CSelectServer::OnShareRoutine(Int, uintptr_t, LLong, CEventQueue::EVENT_TYPE)

@@ -133,6 +133,9 @@ bool CGateRoutine::Pause(bool)
 bool CGateRoutine::Update(void)
 {
 	CheckSessionTimeout();
+
+	UInt uStat[3] = { (UInt)(m_nQueueEnd - m_nQueueCur), (UInt)m_nGameSelect, (UInt)(m_nGameCur - m_nGameSelect) };
+	m_pServer->GetUIHandler()->OnHandle(PAK_EVENT_SYNC, reinterpret_cast<uintptr_t>(uStat), DATA_INDEX_MAX);
 	return true;
 }
 

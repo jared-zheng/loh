@@ -85,19 +85,13 @@ bool CSelectServer::InitLoadConfig(void)
 	m_ServerInfo.usIncr = m_pConfig->GetServerIncr(CServerConfig::CFG_DEFAULT_SELECT);
 	LOGV_INFO(m_FileLog, TF("[选择服务器]从配置对象读取服务器Id=%d, Incr=%d!"), m_ServerInfo.usId, m_ServerInfo.usIncr);
 	if (m_pConfig->GetNetworkAttr() & ATTR_IPV6) {
-		m_ServerInfo.NetAddr[SELECTI_UDP].usAttr    = ATTR_IPV6;
-		m_ServerInfo.NetAddr[SELECTI_CENTER].usAttr = ATTR_IPV6;
+		m_ServerInfo.NetAddr[SELECTI_UDP].usAttr = ATTR_IPV6;
 	}
 
-	Int        nPort = 0;
+	UShort     usPort = 0;
 	CStringKey strAddr;
-	m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_SELECT, 0, strAddr, nPort);
-	UShort     usPort = (UShort)nPort;
+	m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_SELECT, 0, strAddr, usPort);
 	m_NetworkPtr->TranslateAddr(strAddr, usPort, m_ServerInfo.NetAddr[SELECTI_UDP]); // client udp
-
-	m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_SELECT, CServerConfig::CFG_DEFAULT_CENTER, strAddr, nPort);
-	usPort = (UShort)nPort;
-	m_NetworkPtr->TranslateAddr(strAddr, usPort, m_ServerInfo.NetAddr[SELECTI_CENTER]); // connect center
 	return true;
 }
 //--------------------------------------
@@ -152,19 +146,22 @@ bool CSelectServer::StartConnectCenterServer(void)
 	// 选择和中心在不同进程,  需要连接内网中心服务器
 	if ((m_pConfig->GetLoadServers() & CServerConfig::CFG_DEFAULT_CENTER) == 0) {
 		if (m_krConnectCenter == nullptr) {
-			m_krConnectCenter = m_NetworkPtr->Create(*this, m_ServerInfo.NetAddr[SELECTI_CENTER]);
+			UShort     usPort = 0;
+			CStringKey strAddr;
+			m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_SELECT, CServerConfig::CFG_DEFAULT_CENTER, strAddr, usPort);
+			m_krConnectCenter = m_NetworkPtr->Create(*this, usPort, *strAddr);
 		}
 		if (m_krConnectCenter != nullptr) {
 			if (m_bCenterCnnted == false) {
 				LOG_INFO(m_FileLog, TF("[选择服务器]选择服务器和中心服务器在不同进程, 创建连接中心服务器Socket成功"));
-				Int         nPort = 0;
-				CStringKey  strAddr;
-				m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_SELECT, strAddr, nPort);
-				if (m_NetworkPtr->Connect(m_krConnectCenter, (UShort)nPort, *strAddr) == false) {
-					LOGV_ERROR(m_FileLog, TF("[选择服务器]连接中心服务器[%s]:%d请求失败"), *strAddr, nPort);
+				UShort     usPort = 0;
+				CStringKey strAddr;
+				m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_SELECT, strAddr, usPort);
+				if (m_NetworkPtr->Connect(m_krConnectCenter, usPort, *strAddr) == false) {
+					LOGV_ERROR(m_FileLog, TF("[选择服务器]连接中心服务器[%s]:%d请求失败"), *strAddr, usPort);
 					return false;
 				}
-				LOGV_INFO(m_FileLog, TF("[选择服务器]连接中心服务器[%s]:%d请求完成"), *strAddr, nPort);
+				LOGV_INFO(m_FileLog, TF("[选择服务器]连接中心服务器[%s]:%d请求完成"), *strAddr, usPort);
 			}
 		}
 		else {
@@ -185,7 +182,6 @@ bool CSelectServer::StartConnectCenterServer(void)
 
 		LOG_INFO(m_FileLog, TF("[选择服务器]同进程直接连接中心服务器"));
 		m_ServerInfo.usStatus = STATUSU_LINK;
-		m_ServerInfo.NetAddr[SELECTI_CENTER].usPort = 0; // 0 == 同进程共享
 
 		CSelectLink Link;
 		Link.SetServerData(m_ServerInfo);
@@ -234,7 +230,7 @@ bool CSelectServer::Pause(bool bPause)
 //--------------------------------------
 void CSelectServer::Stop(void)
 {
-	if (m_nStatus > STATUSC_INIT) {
+	if (m_nStatus > STATUSC_NONE) {
 		LOG_INFO(m_FileLog, TF("[选择服务器]选择服务停止开始!"));
 
 		StopUDPService();
@@ -307,7 +303,10 @@ bool CSelectServer::OnTcpDispatch(const PacketPtr& PktPtr, PTCP_PARAM pTcp)
 	case PAK_EVENT_LINKACK:
 		{
 			m_bCenterLinked = true;
-			m_pUIHandler->OnHandle(PAK_EVENT_LINK, reinterpret_cast<uintptr_t>(m_ServerInfo.NetAddr + SELECTI_CENTER), DATA_INDEX_CENTER);
+
+			NET_ADDR NetAddr;
+			m_NetworkPtr->GetAddr(pTcp->krSocket, NetAddr, false);
+			m_pUIHandler->OnHandle(PAK_EVENT_LINK, reinterpret_cast<uintptr_t>(&NetAddr), DATA_INDEX_CENTER);
 			LOG_INFO(m_FileLog, TF("[选择服务器]收到中心服务器连接回复包"));
 		}
 		break;
@@ -360,7 +359,7 @@ bool CSelectServer::OnUdpDispatch(const PacketPtr& PktPtr, PUDP_PARAM pUdp)
 		m_ServerInfo.Incr();
 		// 1. 判断IP是否在黑名单
 		if (CheckAddrBlacklist(pUdp->NetAddr) == false) {
-			// 实际需要按电信或者网通线路PING值为参考来排序
+			// TODO!!! 客户端可以通过DNS智能解析连接同网络的选择服务器
 			CPAKSelectLoginAck SelectLoginAck;
 			PSORT_RESULT pSortResult = m_SortChain.GetCur();
 			if (pSortResult->lCount > 0) {
@@ -407,7 +406,6 @@ bool CSelectServer::OnTcpConnect(UInt uError, KeyRef krConnect)
 	assert(krConnect == m_krConnectCenter);
 	m_bCenterCnnted = (uError == 0);
 	if (m_bCenterCnnted) {
-		m_NetworkPtr->GetAddr(krConnect, m_ServerInfo.NetAddr[SELECTI_CENTER], false);
 		LinkCenterServer();
 	}
 	else {
@@ -537,17 +535,14 @@ bool CSelectServer::SyncLoginSortInfo(CStream& Stream)
 		PINDEX index  = m_LoginSvrMap.First();
 		while ((index != nullptr) && (nCount < SORT_RESULT::SORTC_LIMIT)) {
 			SVR_LOGIN_MAP::SVR_MAP_PAIR* pPair = m_LoginSvrMap.Next(index);
-			if ((pPair->m_V.usStatus > STATUSU_NONE) && (pPair->m_V.usStatus < STATUSU_UNLINK)) {
-				pSortResult->Sort[nCount].usBusy   = pPair->m_V.usBusy;
-				pSortResult->Sort[nCount].usIncr   = pPair->m_V.usIncr;
-				pSortResult->Sort[nCount].drServer = pPair->m_K;
-				pSortResult->Sort[nCount].Addr     = pPair->m_V.NetAddr[LOGINI_TCP];
-				++nCount;
-			}
+			pSortResult->Sort[nCount].usBusy   = pPair->m_V.usBusy;
+			pSortResult->Sort[nCount].usIncr   = pPair->m_V.usIncr;
+			pSortResult->Sort[nCount].drServer = pPair->m_K;
+			pSortResult->Sort[nCount].Addr     = pPair->m_V.NetAddr[LOGINI_TCP];
+			++nCount;
 		}
 	}
 	if (nCount > 1) {
-		// 实际需要按电信或者网通线路PING值为参考来排序
 		if (nCount > 2) {
 			SERVER_SORT::QuickSort(pSortResult->Sort, nCount);
 		}

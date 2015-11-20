@@ -22,9 +22,6 @@
 class CCommonServerSystem : public CSubSystem
 {
 public:
-	// CTRefCount
-	//virtual Long  AddRef(void) OVERRIDE;
-	virtual Long  Release(void) OVERRIDE;
 	// CComponent
 	virtual UInt  Command(PCXStr pszCMD, uintptr_t utParam) OVERRIDE;
 	virtual UInt  Update(void) OVERRIDE;
@@ -58,11 +55,6 @@ INLINE CCommonServerSystem::CCommonServerSystem(const CCommonServerSystem&)
 INLINE CCommonServerSystem& CCommonServerSystem::operator=(const CCommonServerSystem&)
 {
 	return (*this);
-}
-// CTRefCount
-INLINE Long CCommonServerSystem::Release(void)
-{
-	return m_Counter.Reset();
 }
 // CComponent
 INLINE UInt CCommonServerSystem::Command(PCXStr, uintptr_t)

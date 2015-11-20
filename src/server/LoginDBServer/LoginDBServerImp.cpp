@@ -145,19 +145,19 @@ bool CLoginDBServer::Start(void)
 // 运行创建监听登陆服务器连接的连接对象
 bool CLoginDBServer::StartListenLoginServer(void)
 {
-	Int        nPort = 0;
+	UShort     usPort = 0;
 	CStringKey strAddr;
-	m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_LOGINDB, 0, strAddr, nPort);
+	m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_LOGINDB, 0, strAddr, usPort);
 
 	bool bRet = true;
 	assert(m_krListenLogin == nullptr);
-	m_krListenLogin = m_NetworkPtr->Create(*this, (UShort)nPort, *strAddr);
+	m_krListenLogin = m_NetworkPtr->Create(*this, usPort, *strAddr);
 	if (m_krListenLogin != nullptr) {
 		bRet = m_NetworkPtr->Listen(m_krListenLogin);
-		LOGV_INFO(m_FileLog, TF("[登陆DB服务器]创建监听登陆服务器的连接[%s]:%d成功, %s"), *strAddr, nPort, bRet ? TF("监听连接成功") : TF("监听连接失败"));
+		LOGV_INFO(m_FileLog, TF("[登陆DB服务器]创建监听登陆服务器的连接[%s]:%d成功, %s"), *strAddr, usPort, bRet ? TF("监听连接成功") : TF("监听连接失败"));
 	}
 	else {
-		LOGV_ERROR(m_FileLog, TF("[登陆DB服务器]创建监听登陆服务器的连接[%s]:%d失败"), *strAddr, nPort);
+		LOGV_ERROR(m_FileLog, TF("[登陆DB服务器]创建监听登陆服务器的连接[%s]:%d失败"), *strAddr, usPort);
 		bRet = false;
 	}
 	return bRet;
@@ -182,7 +182,7 @@ bool CLoginDBServer::Pause(bool bPause)
 //--------------------------------------
 void CLoginDBServer::Stop(void)
 {
-	if (m_nStatus > STATUSC_INIT) {
+	if (m_nStatus > STATUSC_NONE) {
 		LOG_INFO(m_FileLog, TF("[登陆DB服务器]登陆DB服务停止开始!"));
 
 		m_LoginDBRoutine->Stop();

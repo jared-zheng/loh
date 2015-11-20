@@ -88,18 +88,13 @@ void CGateDlg::OnLive(bool bStart)
 {
 	CStringFix strTemp;
 	if (bStart){
-		Int        nPort = 0;
+		UShort     usPort = 0;
 		CStringKey strAddr;
 
 		strTemp.Load(IDC_TCP_SERVICE);
-		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_GATE, 0, strAddr, nPort);
-		strTemp.AppendFormat(TF("[%s]%d"), *strAddr, nPort);
+		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_GATE, 0, strAddr, usPort);
+		strTemp.AppendFormat(TF("[%s]%d"), *strAddr, usPort);
 		m_TCPService.SetWindowText(*strTemp);
-
-		strTemp.Load(IDC_UDP_SERVICE);
-		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_GATE, CServerConfig::CFG_DEFAULT_LOGIN, strAddr, nPort);
-		strTemp.AppendFormat(TF("[%s]%d"), *strAddr, nPort);
-		m_UDPService.SetWindowText(*strTemp);
 	}
 	else{
 		strTemp.Load(IDC_CONNECT_GAMEDB);
@@ -127,13 +122,12 @@ void CGateDlg::OnLink(Int nServerIndex, uintptr_t utParam)
 		if (utParam != 0) {
 			CNETTraits::PNET_ADDR pAddr = (reinterpret_cast<CNETTraits::PNET_ADDR>(utParam));
 
-			Int        nPort = 0;
+			UShort     usPort = 0;
 			CStringKey strAddr;
 
-			GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_GAMEDB, CServerConfig::CFG_DEFAULT_GATE, strAddr, nPort);
-			strTemp.AppendFormat(TF("[%s]%d"), *strAddr, nPort);
+			GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_GAMEDB, CServerConfig::CFG_DEFAULT_GATE, strAddr, usPort);
+			strTemp.AppendFormat(TF("[%s]%d"), *strAddr, usPort);
 
-			UShort usPort = 0;
 			GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pAddr, false);
 			strTemp.AppendFormat(TF("([%s]%d)"), *strAddr, usPort);
 		}
@@ -151,13 +145,12 @@ void CGateDlg::OnLink(Int nServerIndex, uintptr_t utParam)
 		if (utParam != 0) {
 			CNETTraits::PNET_ADDR pAddr = (reinterpret_cast<CNETTraits::PNET_ADDR>(utParam));
 
-			Int        nPort = 0;
+			UShort     usPort = 0;
 			CStringKey strAddr;
 
-			GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_GAME, 0, strAddr, nPort);
-			strTemp.AppendFormat(TF("[%s]%d"), *strAddr, nPort);
+			GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_GAME, CServerConfig::CFG_DEFAULT_GATE, strAddr, usPort);
+			strTemp.AppendFormat(TF("[%s]%d"), *strAddr, usPort);
 
-			UShort usPort = 0;
 			GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pAddr, false);
 			strTemp.AppendFormat(TF("([%s]%d)"), *strAddr, usPort);
 		}
@@ -167,6 +160,17 @@ void CGateDlg::OnLink(Int nServerIndex, uintptr_t utParam)
 			strTemp += strTemp1;
 		}
 		m_ConnectGame.SetWindowText(*strTemp);
+	}
+	else if (nServerIndex == DATA_INDEX_GATE) {
+		strTemp.Load(IDC_UDP_SERVICE);
+
+		CNETTraits::PNET_ADDR pAddr = (reinterpret_cast<CNETTraits::PNET_ADDR>(utParam));
+
+		UShort     usPort = 0;
+		CStringKey strAddr;
+		GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pAddr, false);
+		strTemp.AppendFormat(TF("[%s]%d"), *strAddr, usPort);
+		m_UDPService.SetWindowText(*strTemp);
 	}
 }
 
@@ -180,7 +184,7 @@ void CGateDlg::OnSync(Int nServerIndex, uintptr_t utParam)
 		PSERVER_DATA pData = reinterpret_cast<PSERVER_DATA>(utParam);
 		m_uGateOnline = pData->uOnline;
 		m_uGateAll    = pData->uAllCount;
-		m_uGateBusy   = pData->usBusy;
+		m_uGateBusy   = pData->usBusy / DATAD_PERCENT;
 	}
 	else {
 		PUInt p = reinterpret_cast<PUInt>(utParam);

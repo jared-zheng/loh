@@ -116,9 +116,6 @@ void CCommonDlg::InitListViewItem(Int nServerIndex)
 			{
 				strTemp.Load(IDS_UDP_SERVICE);
 				pListView->AddColumn(*strTemp, 4, 120, -1, LVCF_WIDTH | LVCF_TEXT);
-
-				strTemp.Load(IDS_CONNECT_CENTER);
-				pListView->AddColumn(*strTemp, 5, 120, -1, LVCF_WIDTH | LVCF_TEXT);
 			}
 			break;
 		case DATA_INDEX_LOGIN:
@@ -126,14 +123,8 @@ void CCommonDlg::InitListViewItem(Int nServerIndex)
 				strTemp.Load(IDS_TCP_SERVICE);
 				pListView->AddColumn(*strTemp, 4, 120, -1, LVCF_WIDTH | LVCF_TEXT);
 
-				strTemp.Load(IDS_LISTEN_GAME);
+				strTemp.Load(IDS_UDP_TO_GAME);
 				pListView->AddColumn(*strTemp, 5, 120, -1, LVCF_WIDTH | LVCF_TEXT);
-
-				strTemp.Load(IDS_CONNECT_CENTER);
-				pListView->AddColumn(*strTemp, 6, 120, -1, LVCF_WIDTH | LVCF_TEXT);
-
-				strTemp.Load(IDS_CONNECT_LOGINDB);
-				pListView->AddColumn(*strTemp, 7, 120, -1, LVCF_WIDTH | LVCF_TEXT);
 
 				strTemp.Load(IDD_LOGINDB);
 				pListView->AddColumn(*strTemp, 8, 120, -1, LVCF_WIDTH | LVCF_TEXT);
@@ -141,29 +132,24 @@ void CCommonDlg::InitListViewItem(Int nServerIndex)
 			break;
 		case DATA_INDEX_GAME:
 			{
-				strTemp.Load(IDS_LISTEN_GATE);
+				strTemp.Load(IDS_LISTEN_PING);
 				pListView->AddColumn(*strTemp, 4, 120, -1, LVCF_WIDTH | LVCF_TEXT);
 
 				strTemp.Load(IDS_LISTEN_ZONE);
 				pListView->AddColumn(*strTemp, 5, 120, -1, LVCF_WIDTH | LVCF_TEXT);
 
-				strTemp.Load(IDS_LISTEN_LOGIN);
+				strTemp.Load(IDS_LISTEN_GATE);
 				pListView->AddColumn(*strTemp, 6, 120, -1, LVCF_WIDTH | LVCF_TEXT);
 
-				strTemp.Load(IDS_CONNECT_CENTER);
+				strTemp.Load(IDS_UDP_TO_LOGIN);
 				pListView->AddColumn(*strTemp, 7, 120, -1, LVCF_WIDTH | LVCF_TEXT);
 
-				strTemp.Load(IDS_CONNECT_GAMEDB);
-				pListView->AddColumn(*strTemp, 8, 120, -1, LVCF_WIDTH | LVCF_TEXT);
-
 				strTemp.Load(IDD_GAMEDB);
-				pListView->AddColumn(*strTemp, 9, 120, -1, LVCF_WIDTH | LVCF_TEXT);
+				pListView->AddColumn(*strTemp, 8, 120, -1, LVCF_WIDTH | LVCF_TEXT);
 			}
 			break;
 		case DATA_INDEX_ZONE:
 			{
-				strTemp.Load(IDS_CONNECT_GAME);
-				pListView->AddColumn(*strTemp, 4, 120, -1, LVCF_WIDTH | LVCF_TEXT);
 			}
 			break;
 		case DATA_INDEX_GATE:
@@ -171,17 +157,11 @@ void CCommonDlg::InitListViewItem(Int nServerIndex)
 				strTemp.Load(IDS_TCP_SERVICE);
 				pListView->AddColumn(*strTemp, 4, 120, -1, LVCF_WIDTH | LVCF_TEXT);
 
-				strTemp.Load(IDS_LISTEN_LOGIN);
+				strTemp.Load(IDS_UDP_TO_LOGIN);
 				pListView->AddColumn(*strTemp, 5, 120, -1, LVCF_WIDTH | LVCF_TEXT);
 
-				strTemp.Load(IDS_CONNECT_GAME);
-				pListView->AddColumn(*strTemp, 6, 120, -1, LVCF_WIDTH | LVCF_TEXT);
-
-				strTemp.Load(IDS_CONNECT_GAMEDB);
-				pListView->AddColumn(*strTemp, 7, 120, -1, LVCF_WIDTH | LVCF_TEXT);
-
 				strTemp.Load(IDD_GAMEDB);
-				pListView->AddColumn(*strTemp, 8, 120, -1, LVCF_WIDTH | LVCF_TEXT);
+				pListView->AddColumn(*strTemp, 6, 120, -1, LVCF_WIDTH | LVCF_TEXT);
 			}
 			break;
 		default:
@@ -198,7 +178,7 @@ bool CCommonDlg::AddListViewData(Int nServerIndex, uintptr_t utParam)
 	if (pListView != nullptr) {
 		assert(utParam != 0);
 		SVR_TEST_MAP::PSVR_PAIR pPair = reinterpret_cast<SVR_TEST_MAP::PSVR_PAIR>(utParam);
-		assert(pPair->Value.usStatus == STATUSU_LINK);
+		assert(pPair->Value.usStatus & STATUSU_LINK);
 #ifdef _DEBUG
 		LVFINDINFO find ={0};
 		find.flags  = LVFI_PARAM;
@@ -218,7 +198,9 @@ bool CCommonDlg::AddListViewData(Int nServerIndex, uintptr_t utParam)
 			strTemp.ToString((ULong)(pPair->Value.usBusy / DATAD_PERCENT));
 			pListView->SetItemText(nIndex, 3, *strTemp);
 
-			AddListViewAddr(nServerIndex, nIndex, pPair->Value.NetAddr);
+			if (pPair->Value.AddrLen() > 0) {
+				AddListViewAddr(nServerIndex, nIndex, pPair->Value.NetAddr);
+			}
 
 			pListView->SetItemData(nIndex, (uintptr_t)pPair->drKey);
 			return true;
@@ -234,7 +216,7 @@ bool CCommonDlg::UpdateListViewData(Int nServerIndex, uintptr_t utParam)
 	if (pListView != nullptr) {
 		assert(utParam != 0);
 		SVR_TEST_MAP::PSVR_PAIR pPair = reinterpret_cast<SVR_TEST_MAP::PSVR_PAIR>(utParam);
-		assert((pPair->Value.usStatus == STATUSU_SYNC) || (pPair->Value.usStatus == STATUSU_LINK));
+		assert(pPair->Value.usStatus & (STATUSU_SYNC | STATUSU_LINK));
 		LVFINDINFO find ={0};
 		find.flags  = LVFI_PARAM;
 		find.lParam = (LPARAM)(pPair->drKey);
@@ -298,16 +280,6 @@ void CCommonDlg::AddListViewAddr(Int nServerIndex, Int nIndex, void* pAddr)
 			GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pNetAddr, false);
 			strTemp.Format(TF("[%s]:%d"), *strAddr, usPort);
 			pListView->SetItemText(nIndex, 4, *strTemp);
-			// center
-			++pNetAddr;
-			if (pNetAddr->usPort != 0) {
-				GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pNetAddr, false);
-				strTemp.Format(TF("[%s]:%d"), *strAddr, usPort);
-			}
-			else {
-				strTemp.Load(IDS_SHARE_CENTER);
-			}
-			pListView->SetItemText(nIndex, 5, *strTemp);
 		}
 		break;
 	case DATA_INDEX_LOGIN:
@@ -321,86 +293,40 @@ void CCommonDlg::AddListViewAddr(Int nServerIndex, Int nIndex, void* pAddr)
 			GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pNetAddr, false);
 			strTemp.Format(TF("[%s]:%d"), *strAddr, usPort);
 			pListView->SetItemText(nIndex, 5, *strTemp);
-			// center
-			++pNetAddr;
-			if (pNetAddr->usPort != 0) {
-				GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pNetAddr, false);
-				strTemp.Format(TF("[%s]:%d"), *strAddr, usPort);
-			}
-			else {
-				strTemp.Load(IDS_SHARE_CENTER);
-			}
-			pListView->SetItemText(nIndex, 6, *strTemp);
 			// logindb
-			++pNetAddr;
-			if (pNetAddr->usPort != 0) {
-				GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pNetAddr, false);
-				strTemp.Format(TF("[%s]:%d"), *strAddr, usPort);
-			}
-			else {
-				strTemp.Load(IDS_SHARE_LOGINDB);
-			}
-			pListView->SetItemText(nIndex, 7, *strTemp);
-
 			++pNetAddr;
 			GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pNetAddr, false);
 			strTemp.Format(TF("[%s]:%d"), *strAddr, usPort);
-			pListView->SetItemText(nIndex, 8, *strTemp);
+			pListView->SetItemText(nIndex, 6, *strTemp);
 		}
 		break;
 	case DATA_INDEX_GAME:
 		{
-			// gate
+			// ping
 			GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pNetAddr, false);
-			strTemp.Format(TF("[%s]:%d"), *strAddr, usPort);
-			pListView->SetItemText(nIndex, 4, *strTemp);
+			pListView->SetItemText(nIndex, 4, *strAddr);
 			// zone
 			++pNetAddr;
 			GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pNetAddr, false);
 			strTemp.Format(TF("[%s]:%d"), *strAddr, usPort);
 			pListView->SetItemText(nIndex, 5, *strTemp);
+			// gate
+			++pNetAddr;
+			if (pNetAddr->usPort != 0) {
+				GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pNetAddr, false);
+				strTemp.Format(TF("[%s]:%d"), *strAddr, usPort);
+			}
+			pListView->SetItemText(nIndex, 6, *strTemp);
 			// udp
 			++pNetAddr;
 			GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pNetAddr, false);
 			strTemp.Format(TF("[%s]:%d"), *strAddr, usPort);
-			pListView->SetItemText(nIndex, 6, *strTemp);
-			// center
-			++pNetAddr;
-			if (pNetAddr->usPort != 0) {
-				GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pNetAddr, false);
-				strTemp.Format(TF("[%s]:%d"), *strAddr, usPort);
-			}
-			else {
-				strTemp.Load(IDS_SHARE_CENTER);
-			}
 			pListView->SetItemText(nIndex, 7, *strTemp);
 			// gamedb
 			++pNetAddr;
-			if (pNetAddr->usPort != 0) {
-				GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pNetAddr, false);
-				strTemp.Format(TF("[%s]:%d"), *strAddr, usPort);
-			}
-			else {
-				strTemp.Load(IDS_SHARE_GAMEDB);
-			}
-			pListView->SetItemText(nIndex, 8, *strTemp);
-
-			++pNetAddr;
 			GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pNetAddr, false);
 			strTemp.Format(TF("[%s]:%d"), *strAddr, usPort);
-			pListView->SetItemText(nIndex, 9, *strTemp);
-		}
-		break;
-	case DATA_INDEX_ZONE:
-		{
-			if (pNetAddr->usPort != 0) {
-				GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pNetAddr, false);
-				strTemp.Format(TF("[%s]:%d"), *strAddr, usPort);
-			}
-			else {
-				strTemp.Load(IDS_SHARE_GAME);
-			}
-			pListView->SetItemText(nIndex, 4, *strTemp);
+			pListView->SetItemText(nIndex, 8, *strTemp);
 		}
 		break;
 	case DATA_INDEX_GATE:
@@ -414,31 +340,11 @@ void CCommonDlg::AddListViewAddr(Int nServerIndex, Int nIndex, void* pAddr)
 			GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pNetAddr, false);
 			strTemp.Format(TF("[%s]:%d"), *strAddr, usPort);
 			pListView->SetItemText(nIndex, 5, *strTemp);
-			// game
-			++pNetAddr;
-			if (pNetAddr->usPort != 0) {
-				GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pNetAddr, false);
-				strTemp.Format(TF("[%s]:%d"), *strAddr, usPort);
-			}
-			else {
-				strTemp.Load(IDS_SHARE_GAME);
-			}
-			pListView->SetItemText(nIndex, 6, *strTemp);
 			// gamedb
-			++pNetAddr;
-			if (pNetAddr->usPort != 0) {
-				GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pNetAddr, false);
-				strTemp.Format(TF("[%s]:%d"), *strAddr, usPort);
-			}
-			else {
-				strTemp.Load(IDS_SHARE_GAMEDB);
-			}
-			pListView->SetItemText(nIndex, 7, *strTemp);
-
 			++pNetAddr;
 			GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pNetAddr, false);
 			strTemp.Format(TF("[%s]:%d"), *strAddr, usPort);
-			pListView->SetItemText(nIndex, 8, *strTemp);
+			pListView->SetItemText(nIndex, 6, *strTemp);
 		}
 		break;
 	default:

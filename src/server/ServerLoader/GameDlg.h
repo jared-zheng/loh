@@ -59,6 +59,7 @@ private:
 	UInt                   m_uGateAll;    // 网关服务器连接客户端总数量
 	CXStatic               m_ConnectCenter;
 	CXStatic               m_ConnectGameDB;
+	CXStatic               m_PingService;
 	CXStatic               m_ListenZone;
 	CXStatic               m_ListenGate;
 	CXStatic               m_UDPService;

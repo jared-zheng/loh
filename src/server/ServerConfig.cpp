@@ -108,8 +108,8 @@ bool CServerConfig::Init(PCXStr pszName)
 				m_strCenterServerPath = CenterServerPath;
 			}
 			LoadAddr(ini, CenterServer, SelectServer, m_strCenterServerSelectAddr, m_nCenterServerSelectPort, CFG_CENTER_SELECT_PORT); // 监听选择服务器的地址
-			LoadAddr(ini, CenterServer, LoginServer,  m_strCenterServerLoginAddr,  m_nCenterServerLoginPort,  CFG_CENTER_LOGIN_PORT);  // 监听登陆服务器的地址
-			LoadAddr(ini, CenterServer, GameServer,   m_strCenterServerGameAddr,   m_nCenterServerGamePort,   CFG_CENTER_GAME_PORT);   // 监听游戏服务器的地址
+			LoadAddr(ini, CenterServer, LoginServer,  m_strCenterServerLoginAddr,  m_nCenterServerLoginPort,  0);   // 监听登陆服务器的地址
+			LoadAddr(ini, CenterServer, GameServer,   m_strCenterServerGameAddr,   m_nCenterServerGamePort,   0);   // 监听游戏服务器的地址
 			m_nCenterServerId   = (Int)ini.GetKeyIntValue(CenterServer, Id, DATA_INDEX_CENTER); // 服务器Id
 			m_nCenterServerIncr = (Int)ini.GetKeyIntValue(CenterServer, Incr, CFG_BUSY_DEF_INCREMENT); // 每创建一个连接增加的繁忙程度(万分比)
 			ini.GetKeyValue(CenterServer, ExtConfig, m_strCenterServerExtConfig); // 额外配置文件路径
@@ -154,7 +154,7 @@ bool CServerConfig::Init(PCXStr pszName)
 			}
 			LoadAddr(ini, LoginServer, CenterServer,  m_strLoginServerCenterAddr,  m_nLoginServerCenterPort,  0); // 连接中心服务器的本地地址
 			LoadAddr(ini, LoginServer, LoginDBServer, m_strLoginServerLoginDBAddr, m_nLoginServerLoginDBPort, 0); // 连接登陆DB服务器的本地地址
-			LoadAddr(ini, LoginServer, GameServer,    m_strLoginServerGameAddr,    m_nLoginServerGamePort,   CFG_LOGIN_GAME_PORT); // 监听游戏服务器的UDP地址
+			LoadAddr(ini, LoginServer, GameServer,    m_strLoginServerGameAddr,    m_nLoginServerGamePort,   0); // 监听游戏服务器的UDP地址
 			LoadAddr(ini, LoginServer, Service,       m_strLoginServerClientAddr,  m_nLoginServerClientPort, CFG_LOGIN_PORT); // TCP服务地址
 			m_nLoginServerId   = (Int)ini.GetKeyIntValue(LoginServer, Id, DATA_INDEX_LOGIN);
 			m_nLoginServerIncr = (Int)ini.GetKeyIntValue(LoginServer, Incr, CFG_BUSY_DEF_INCREMENT);
@@ -167,7 +167,7 @@ bool CServerConfig::Init(PCXStr pszName)
 				m_strGameDBServerPath = GameDBServerPath;
 			}
 			LoadAddr(ini, GameDBServer, GameServer, m_strGameDBServerGameAddr, m_nGameDBServerGamePort, CFG_GAMEDB_GAME_PORT); // 监听游戏服务器的地址
-			LoadAddr(ini, GameDBServer, GateServer, m_strGameDBServerGateAddr, m_nGameDBServerGatePort, CFG_GAMEDB_GATE_PORT); // 监听网关服务器的地址
+			LoadAddr(ini, GameDBServer, GateServer, m_strGameDBServerGateAddr, m_nGameDBServerGatePort, 0); // 监听网关服务器的地址
 			m_nGameDBServerId    = (Int)ini.GetKeyIntValue(GameDBServer, Id, DATA_INDEX_GAMEDB);
 			m_nGameDBServerIncr  = (Int)ini.GetKeyIntValue(GameDBServer, Incr, CFG_BUSY_DEF_INCREMENT);
 			m_nGameDBServerQueue = (Int)ini.GetKeyIntValue(GameDBServer, Queue, 0); // 事务队列线程数量
@@ -185,10 +185,11 @@ bool CServerConfig::Init(PCXStr pszName)
 			}
 			LoadAddr(ini, GameServer, CenterServer, m_strGameServerCenterAddr, m_nGameServerCenterPort, 0); // 连接中心服务器的本地地址
 			LoadAddr(ini, GameServer, GameDBServer, m_strGameServerGameDBAddr, m_nGameServerGameDBPort, 0); // 连接游戏DB服务器的本地地址
-			LoadAddr(ini, GameServer, LoginServer,  m_strGameServerLoginAddr,  m_nGameServerLoginPort,  CFG_GAME_LOGN_PORT); // 监听登陆服务器的UDP地址
+			LoadAddr(ini, GameServer, LoginServer,  m_strGameServerLoginAddr,  m_nGameServerLoginPort,  0); // 监听登陆服务器的UDP地址
 			LoadAddr(ini, GameServer, ZoneServer,   m_strGameServerZoneAddr,   m_nGameServerZonePort,   CFG_GAME_ZONE_PORT); // 监听地图服务器的地址
-			LoadAddr(ini, GameServer, GateServer,   m_strGameServerGateAddr,   m_nGameServerGatePort,   CFG_GAME_GATE_PORT); // 监听网关服务器的地址
-			m_nGameServerId   = (Int)ini.GetKeyIntValue(GameServer, Id, DATA_INDEX_GAME);
+			LoadAddr(ini, GameServer, GateServer,   m_strGameServerGateAddr,   m_nGameServerGatePort,   0); // 监听网关服务器的地址
+			LoadAddr(ini, GameServer, Service,      m_strGameServerPingAddr,   m_nGameServerId,   0); // PING
+			m_nGameServerId   = (Int)ini.GetKeyIntValue(GameServer, Id, DATA_INDEX_GAME); // 游戏服务器这里填写服务器Id, 客户端用来索引名称
 			m_nGameServerIncr = (Int)ini.GetKeyIntValue(GameServer, Incr, CFG_BUSY_DEF_INCREMENT);
 			ini.GetKeyValue(GameServer, ExtConfig, m_strGameServerExtConfig);
 		}
@@ -215,7 +216,7 @@ bool CServerConfig::Init(PCXStr pszName)
 			}
 			LoadAddr(ini, GateServer, GameDBServer, m_strGateServerGameDBAddr, m_nGateServerGameDBPort, 0); // 连接游戏DB服务器的本地地址
 			LoadAddr(ini, GateServer, GameServer,   m_strGateServerGameAddr,   m_nGateServerGamePort,   0); // 连接游戏服务器的本地地址
-			LoadAddr(ini, GateServer, LoginServer,  m_strGateServerLoginAddr,  m_nGateServerLoginPort,  CFG_GATE_LOGN_PORT); // 监听登陆服务器的UDP地址
+			LoadAddr(ini, GateServer, LoginServer,  m_strGateServerLoginAddr,  m_nGateServerLoginPort,  0); // 监听登陆服务器的UDP地址
 			LoadAddr(ini, GateServer, Service,      m_strGateServerClientAddr, m_nGateServerClientPort, CFG_GATE_PORT); // TCP服务地址
 			m_nGateServerId    = (Int)ini.GetKeyIntValue(GateServer, Id, DATA_INDEX_GATE);
 			m_nGateServerIncr  = (Int)ini.GetKeyIntValue(GateServer, Incr, CFG_BUSY_DEF_INCREMENT);
@@ -303,6 +304,9 @@ bool CServerConfig::Init(PCXStr pszName)
 	}
 	if (m_strGameServerGateAddr.IsEmpty()) {
 		m_strGameServerGateAddr = LocalHost;
+	}
+	if (m_strGameServerPingAddr.IsEmpty()) {
+		m_strGameServerPingAddr = LocalHost;
 	}
 
 	if (m_strZoneServerGameAddr.IsEmpty()) {
@@ -411,13 +415,14 @@ void CServerConfig::Dump(CFileLog& Log)
 		if ((m_nLoadServers & CFG_DEFAULT_GAMEDB) == 0) {
 			LOGV_DUMP(Log, TF("[%s]%s=%s[%d]"), GameDBServer, GameServer,   *m_strGameDBServerGameAddr, m_nGameDBServerGamePort);
 		}
-		LOGV_DUMP(Log, TF("[(%d)%s-->%s]%s=%s[%d], %s=%s[%d], %s=%s[%d], %s=%s[%d], %s=%s[%d], %s=%d, %s=%s"), m_nGameServerId,
+		LOGV_DUMP(Log, TF("[(%d)%s-->%s]%s=%s[%d], %s=%s[%d], %s=%s[%d], %s=%s[%d], %s=%s[%d], %s=%s, %s=%d, %s=%s"), m_nGameServerId,
 				  GameServer,   *m_strGameServerPath,
 				  CenterServer, *m_strGameServerCenterAddr, m_nGameServerCenterPort,
 			      GameDBServer, *m_strGameServerGameDBAddr, m_nGameServerGameDBPort,
 				  LoginServer,  *m_strGameServerLoginAddr,  m_nGameServerLoginPort,
 				  ZoneServer,   *m_strGameServerZoneAddr,   m_nGameServerZonePort,
 				  GateServer,   *m_strGameServerGateAddr,   m_nGameServerGatePort,
+				  Service,      *m_strGameServerPingAddr,
 			      Incr,          m_nGameServerIncr,
 				  ExtConfig,    *m_strGameServerExtConfig);
 	}
@@ -503,123 +508,127 @@ bool CServerConfig::GetServerPath(Int nServer, CStringFix& strPath)
 	return bRet;
 }
 
-bool CServerConfig::GetServerAddr(Int nServer, Int nServerAddr, CStringKey& strAddr, Int& nPort)
+bool CServerConfig::GetServerAddr(Int nServer, Int nServerAddr, CStringKey& strAddr, UShort& usPort)
 {
 	bool bRet = true;
 	switch (nServer) {
-	case CFG_DEFAULT_CENTER: // 读取中心服务器
+	case CFG_DEFAULT_CENTER:
 		{
-			if (nServerAddr == CFG_DEFAULT_LOGIN) {
+			if (nServerAddr == CFG_DEFAULT_LOGIN) { // 监听登陆服务器地址, Port=0表示和前面的监听选择服务器地址一样
 				strAddr = m_strCenterServerLoginAddr;
-				nPort = m_nCenterServerLoginPort;
+				usPort  = (UShort)m_nCenterServerLoginPort;
 			}
-			else if (nServerAddr == CFG_DEFAULT_GAME) {
+			else if (nServerAddr == CFG_DEFAULT_GAME) { // 监听游戏服务器地址, Port=0表示和前面的监听选择/登陆服务器地址一样
 				strAddr = m_strCenterServerGameAddr;
-				nPort = m_nCenterServerGamePort;
+				usPort  = (UShort)m_nCenterServerGamePort;
 			}
 			else {
-				strAddr = m_strCenterServerSelectAddr;
-				nPort = m_nCenterServerSelectPort;
+				strAddr = m_strCenterServerSelectAddr; // // 监听选择服务器地址
+				usPort  = (UShort)m_nCenterServerSelectPort;
 			}
 		}
 		break;
 	case CFG_DEFAULT_SELECT:
 		{
-			if (nServerAddr == CFG_DEFAULT_CENTER) {
+			if (nServerAddr == CFG_DEFAULT_CENTER) { // 连接中心的特定地址, 默认0:0表示随机绑定(多网卡可以指定特定网卡或者特定端口)
 				strAddr = m_strSelectServerCenterAddr;
-				nPort = m_nSelectServerCenterPort;
+				usPort  = (UShort)m_nSelectServerCenterPort;
 			}
 			else {
-				strAddr = m_strSelectServerClientAddr;
-				nPort = m_nSelectServerClientPort;
+				strAddr = m_strSelectServerClientAddr; // 监听客户端UDP地址
+				usPort  = (UShort)m_nSelectServerClientPort;
 			}
 		}
 		break;
 	case CFG_DEFAULT_LOGINDB:
 		{
-			strAddr = m_strLoginDBServerLoginAddr;
-			nPort = m_nLoginDBServerLoginPort;
+			strAddr = m_strLoginDBServerLoginAddr; // 监听登陆服务器地址
+			usPort  = (UShort)m_nLoginDBServerLoginPort;
 		}
 		break;
 	case CFG_DEFAULT_LOGIN:
 		{
-			if (nServerAddr == CFG_DEFAULT_CENTER) {
+			if (nServerAddr == CFG_DEFAULT_CENTER) {// 连接中心的特定地址, 默认0:0表示随机绑定(多网卡可以指定特定网卡或者特定端口)
 				strAddr = m_strSelectServerCenterAddr;
-				nPort = m_nSelectServerCenterPort;
+				usPort  = (UShort)m_nSelectServerCenterPort;
 			}
-			else if (nServerAddr == CFG_DEFAULT_LOGINDB) {
+			else if (nServerAddr == CFG_DEFAULT_LOGINDB) { // 连接登陆DB的特定地址, 默认0:0表示随机绑定(多网卡可以指定特定网卡或者特定端口)
 				strAddr = m_strLoginServerLoginDBAddr;
-				nPort = m_nLoginServerLoginDBPort;
+				usPort  = (UShort)m_nLoginServerLoginDBPort;
 			}
-			else if (nServerAddr == CFG_DEFAULT_GAME) {
+			else if (nServerAddr == CFG_DEFAULT_GAME) { // 监听游戏服务器UDP地址
 				strAddr = m_strLoginServerGameAddr;
-				nPort = m_nLoginServerGamePort;
+				usPort  = (UShort)m_nLoginServerGamePort;
 			}
 			else {
-				strAddr = m_strLoginServerClientAddr;
-				nPort = m_nLoginServerClientPort;
+				strAddr = m_strLoginServerClientAddr; // 监听客户端地址
+				usPort  = (UShort)m_nLoginServerClientPort;
 			}
 		}
 		break;
 	case CFG_DEFAULT_GAMEDB:
 		{
-			if (nServerAddr == CFG_DEFAULT_GATE) {
+			if (nServerAddr == CFG_DEFAULT_GATE) { // 监听网关服务器地址, Port=0表示和前面的监听游戏服务器地址一样
 				strAddr = m_strGameDBServerGateAddr;
-				nPort = m_nGameDBServerGatePort;
+				usPort  = (UShort)m_nGameDBServerGatePort;
 			}
 			else {
-				strAddr = m_strGameDBServerGameAddr;
-				nPort = m_nGameDBServerGamePort;
+				strAddr = m_strGameDBServerGameAddr; // 监听游戏服务器地址
+				usPort  = (UShort)m_nGameDBServerGamePort;
 			}
 		}
 		break;
 	case CFG_DEFAULT_GAME:
 		{
-			if (nServerAddr == CFG_DEFAULT_CENTER) {
+			if (nServerAddr == CFG_DEFAULT_CENTER) {// 连接中心的特定地址, 默认0:0表示随机绑定(多网卡可以指定特定网卡或者特定端口)
 				strAddr = m_strGameServerCenterAddr;
-				nPort = m_nGameServerCenterPort;
+				usPort  = (UShort)m_nGameServerCenterPort;
 			}
-			else if (nServerAddr == CFG_DEFAULT_GAMEDB) {
+			else if (nServerAddr == CFG_DEFAULT_GAMEDB) { // 连接游戏DB的特定地址, 默认0:0表示随机绑定(多网卡可以指定特定网卡或者特定端口)
 				strAddr = m_strGameServerGameDBAddr;
-				nPort = m_nGameServerGameDBPort;
+				usPort  = (UShort)m_nGameServerGameDBPort;
 			}
-			else if (nServerAddr == CFG_DEFAULT_LOGIN) {
+			else if (nServerAddr == CFG_DEFAULT_LOGIN) { // 监听登陆服务器UDP地址
 				strAddr = m_strGameServerLoginAddr;
-				nPort = m_nGameServerLoginPort;
+				usPort  = (UShort)m_nGameServerLoginPort;
+			}
+			else if (nServerAddr == CFG_DEFAULT_GATE) { // 监听网关服务器地址, Port=0表示和前面的监听地图服务器地址一样
+				strAddr = m_strGameServerGateAddr;
+				usPort  = (UShort)m_nGameServerGatePort;
 			}
 			else if (nServerAddr == CFG_DEFAULT_ZONE) {
-				strAddr = m_strGameServerZoneAddr;
-				nPort = m_nGameServerZonePort;
+				strAddr = m_strGameServerZoneAddr; // 监听地图服务器地址
+				usPort  = (UShort)m_nGameServerZonePort;
 			}
 			else {
-				strAddr = m_strGameServerGateAddr;
-				nPort = m_nGameServerGatePort;
+				strAddr = m_strGameServerPingAddr; // PING
+				usPort  = 0;
 			}
 		}
 		break;
 	case CFG_DEFAULT_ZONE:
 		{
-			strAddr = m_strZoneServerGameAddr;
-			nPort = m_nZoneServerGamePort;
+			strAddr = m_strZoneServerGameAddr; // 连接游戏的特定地址, 默认0:0表示随机绑定(多网卡可以指定特定网卡或者特定端口)
+			usPort  = (UShort)m_nZoneServerGamePort;
 		}
 		break;
 	case CFG_DEFAULT_GATE:
 		{
-			if (nServerAddr == CFG_DEFAULT_GAMEDB) {
+			if (nServerAddr == CFG_DEFAULT_GAMEDB) { // 连接游戏DB的特定地址, 默认0:0表示随机绑定(多网卡可以指定特定网卡或者特定端口)
 				strAddr = m_strGateServerGameDBAddr;
-				nPort = m_nGateServerGameDBPort;
+				usPort  = (UShort)m_nGateServerGameDBPort;
 			}
-			else if (nServerAddr == CFG_DEFAULT_GAME) {
+			else if (nServerAddr == CFG_DEFAULT_GAME) { // 连接游戏的特定地址, 默认0:0表示随机绑定(多网卡可以指定特定网卡或者特定端口)
 				strAddr = m_strGateServerGameAddr;
-				nPort = m_nGateServerGamePort;
+				usPort  = (UShort)m_nGateServerGamePort;
 			}
-			else if (nServerAddr == CFG_DEFAULT_LOGIN) {
+			else if (nServerAddr == CFG_DEFAULT_LOGIN) { // 与登陆服务器UDP通信的特定地址, 默认0:0表示随机绑定(多网卡可以指定特定网卡或者特定端口)
 				strAddr = m_strGateServerLoginAddr;
-				nPort = m_nGateServerLoginPort;
+				usPort  = (UShort)m_nGateServerLoginPort;
 			}
 			else {
 				strAddr = m_strGateServerClientAddr;
-				nPort = m_nGateServerClientPort;
+				usPort  = (UShort)m_nGateServerClientPort;
 			}
 		}
 		break;

@@ -94,33 +94,20 @@ bool CLoginServer::InitLoadConfig(void)
 	m_ServerInfo.usIncr = m_pConfig->GetServerIncr(CServerConfig::CFG_DEFAULT_LOGIN);
 	LOGV_INFO(m_FileLog, TF("[登陆服务器]从配置对象读取服务器Id=%d, Incr=%d!"), m_ServerInfo.usId, m_ServerInfo.usIncr);
 	if (m_pConfig->GetNetworkAttr() & ATTR_IPV6) {
-		m_ServerInfo.NetAddr[LOGINI_TCP].usAttr          = ATTR_IPV6;
-		m_ServerInfo.NetAddr[LOGINI_UDP].usAttr          = ATTR_IPV6;
-		m_ServerInfo.NetAddr[LOGINI_CENTER].usAttr       = ATTR_IPV6;
-		m_ServerInfo.NetAddr[LOGINI_LOGINDB].usAttr      = ATTR_IPV6;
-		m_ServerInfo.NetAddr[LOGINI_LOGINDB_ADDR].usAttr = ATTR_IPV6;
+		m_ServerInfo.NetAddr[LOGINI_TCP].usAttr     = ATTR_IPV6;
+		m_ServerInfo.NetAddr[LOGINI_UDP].usAttr     = ATTR_IPV6;
+		m_ServerInfo.NetAddr[LOGINI_LOGINDB].usAttr = ATTR_IPV6;
 	}
-	Int        nPort = 0;
+	UShort     usPort = 0;
 	CStringKey strAddr;
-	m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_LOGIN, 0, strAddr, nPort);
-	UShort     usPort = (UShort)nPort;
+	m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_LOGIN, 0, strAddr, usPort);
 	m_NetworkPtr->TranslateAddr(strAddr, usPort, m_ServerInfo.NetAddr[LOGINI_TCP]); // client tcp
 
-	m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_LOGIN, CServerConfig::CFG_DEFAULT_GAME, strAddr, nPort);
-	usPort = (UShort)nPort;
+	m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_LOGIN, CServerConfig::CFG_DEFAULT_GAME, strAddr, usPort);
 	m_NetworkPtr->TranslateAddr(strAddr, usPort, m_ServerInfo.NetAddr[LOGINI_UDP]); // game udp
 
-	m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_LOGIN, CServerConfig::CFG_DEFAULT_CENTER, strAddr, nPort);
-	usPort = (UShort)nPort;
-	m_NetworkPtr->TranslateAddr(strAddr, usPort, m_ServerInfo.NetAddr[LOGINI_CENTER]); // connect center 
-
-	m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_LOGIN, CServerConfig::CFG_DEFAULT_LOGINDB, strAddr, nPort);
-	usPort = (UShort)nPort;
-	m_NetworkPtr->TranslateAddr(strAddr, usPort, m_ServerInfo.NetAddr[LOGINI_LOGINDB]); // connect logindb
-
-	m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_LOGINDB, 0, strAddr, nPort);
-	usPort = (UShort)nPort;
-	m_NetworkPtr->TranslateAddr(strAddr, usPort, m_ServerInfo.NetAddr[LOGINI_LOGINDB_ADDR]); // logindb
+	m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_LOGINDB, 0, strAddr, usPort);
+	m_NetworkPtr->TranslateAddr(strAddr, usPort, m_ServerInfo.NetAddr[LOGINI_LOGINDB]); // logindb
 	return true;
 }
 //--------------------------------------
@@ -164,9 +151,9 @@ bool CLoginServer::Start(void)
 	if (m_nStatus == STATUSC_INIT) {
 		LOG_INFO(m_FileLog, TF("[登陆服务器]登陆服务启动开始!"));
 
-		if ((StartConnectCenterServer() == false)  ||
+		if ((StartUDPService() == false) || // 提前开启获取地址信息
+			(StartConnectCenterServer() == false)  ||
 			(StartConnectLoginDBServer() == false) ||
-			(StartUDPService() == false) ||
 			(StartTCPService() == false)) {
 			return false;
 		}
@@ -182,19 +169,22 @@ bool CLoginServer::StartConnectCenterServer(void)
 	// 登陆和中心在不同进程,  需要连接内网中心服务器
 	if ((m_pConfig->GetLoadServers() & CServerConfig::CFG_DEFAULT_CENTER) == 0) {
 		if (m_krConnectCenter == nullptr) {
-			m_krConnectCenter = m_NetworkPtr->Create(*this, m_ServerInfo.NetAddr[LOGINI_CENTER]);
+			UShort      usPort = 0;
+			CStringKey  strAddr;
+			m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_LOGIN, CServerConfig::CFG_DEFAULT_CENTER, strAddr, usPort);
+			m_krConnectCenter = m_NetworkPtr->Create(*this, usPort, *strAddr);
 		}
 		if (m_krConnectCenter != nullptr) {
 			if (m_bCenterCnnted == false) {
 				LOG_INFO(m_FileLog, TF("[登陆服务器]登陆服务器和中心服务器在不同进程, 创建连接中心服务器Socket成功"));
-				Int         nPort = 0;
+				UShort      usPort = 0;
 				CStringKey  strAddr;
-				m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_LOGIN, strAddr, nPort);
-				if (m_NetworkPtr->Connect(m_krConnectCenter, (UShort)nPort, *strAddr) == false) {
-					LOGV_ERROR(m_FileLog, TF("[登陆服务器]连接中心服务器[%s]:%d请求失败"), *strAddr, nPort);
+				m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_LOGIN, strAddr, usPort);
+				if (m_NetworkPtr->Connect(m_krConnectCenter, usPort, *strAddr) == false) {
+					LOGV_ERROR(m_FileLog, TF("[登陆服务器]连接中心服务器[%s]:%d请求失败"), *strAddr, usPort);
 					return false;
 				}
-				LOGV_INFO(m_FileLog, TF("[登陆服务器]连接中心服务器[%s]:%d请求完成"), *strAddr, nPort);
+				LOGV_INFO(m_FileLog, TF("[登陆服务器]连接中心服务器[%s]:%d请求完成"), *strAddr, usPort);
 			}
 		}
 		else {
@@ -215,7 +205,6 @@ bool CLoginServer::StartConnectCenterServer(void)
 
 		LOG_INFO(m_FileLog, TF("[登陆服务器]同进程直接连接中心服务器"));
 		m_ServerInfo.usStatus = STATUSU_LINK;
-		m_ServerInfo.NetAddr[LOGINI_CENTER].usPort = 0; // 0 == 同进程共享
 
 		CLoginLink Link;
 		Link.SetServerData(m_ServerInfo);
@@ -236,12 +225,15 @@ bool CLoginServer::StartConnectLoginDBServer(void)
 	// 登陆和登陆DB在不同进程,  需要连接内网登陆DB服务器
 	if ((m_pConfig->GetLoadServers() & CServerConfig::CFG_DEFAULT_LOGINDB) == 0) {
 		if (m_krConnectLoginDB == nullptr) {
-			m_krConnectLoginDB = m_NetworkPtr->Create(*this, m_ServerInfo.NetAddr[LOGINI_LOGINDB]);
+			UShort      usPort = 0;
+			CStringKey  strAddr;
+			m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_LOGIN, CServerConfig::CFG_DEFAULT_LOGINDB, strAddr, usPort);
+			m_krConnectLoginDB = m_NetworkPtr->Create(*this, usPort, *strAddr);
 		}
 		if (m_krConnectLoginDB != nullptr) {
 			if (m_bLoginDBCnnted == false) {
 				LOG_INFO(m_FileLog, TF("[登陆服务器]登陆服务器和登陆DB服务器在不同进程, 创建连接登陆DB服务器Socket成功"));
-				if (m_NetworkPtr->Connect(m_krConnectLoginDB, m_ServerInfo.NetAddr[LOGINI_LOGINDB_ADDR]) == false) {
+				if (m_NetworkPtr->Connect(m_krConnectLoginDB, m_ServerInfo.NetAddr[LOGINI_LOGINDB]) == false) {
 					LOGV_ERROR(m_FileLog, TF("[登陆服务器]连接登陆DB服务器请求失败"));
 					return false;
 				}
@@ -266,7 +258,6 @@ bool CLoginServer::StartConnectLoginDBServer(void)
 
 		LOG_INFO(m_FileLog, TF("[登陆服务器]同进程直接连接登陆DB服务器"));
 		m_ServerInfo.usStatus = STATUSU_LINK;
-		m_ServerInfo.NetAddr[LOGINI_LOGINDB].usPort = 0; // 0 == 同进程共享
 
 		CLoginLink Link;
 		Link.SetServerData(m_ServerInfo);
@@ -288,6 +279,10 @@ bool CLoginServer::StartUDPService(void)
 		m_krUDPService = m_NetworkPtr->Create(*this, m_ServerInfo.NetAddr[LOGINI_UDP], SOCKET_UDP);
 		if (m_krUDPService != nullptr) {
 			LOGV_INFO(m_FileLog, TF("[登陆服务器]创建UDP监听游戏服务器成功"));
+			if (m_ServerInfo.NetAddr[LOGINI_UDP].usPort == 0) {
+				m_NetworkPtr->GetAddr(m_krUDPService, m_ServerInfo.NetAddr[LOGINI_UDP], false);
+			}
+			m_pUIHandler->OnHandle(PAK_EVENT_LINK, reinterpret_cast<uintptr_t>(m_ServerInfo.NetAddr + LOGINI_UDP), DATA_INDEX_LOGIN);
 		}
 		else {
 			LOGV_ERROR(m_FileLog, TF("[登陆服务器]创建UDP监听游戏服务器失败"));
@@ -304,7 +299,7 @@ bool CLoginServer::StartUDPService(void)
 		}
 		m_pShareGameSvr = reinterpret_cast<ICommonServer*>(xValue.pValue);
 	}
-	return (m_krUDPService != nullptr);
+	return true;
 }
 
 // 运行创建监听客户端连接对象
@@ -344,11 +339,11 @@ bool CLoginServer::Pause(bool bPause)
 //--------------------------------------
 void CLoginServer::Stop(void)
 {
-	if (m_nStatus > STATUSC_INIT) {
+	if (m_nStatus > STATUSC_NONE) {
 		LOG_INFO(m_FileLog, TF("[登陆服务器]登陆服务停止开始!"));
 
-		StopTCPService();
 		StopUDPService();
+		StopTCPService();
 		StopConnectLoginDBServer();
 		StopConnectCenterServer();
 
@@ -520,7 +515,10 @@ bool CLoginServer::DispatchCenterServer(const PacketPtr& PktPtr, KeyRef krSocket
 	case PAK_EVENT_LINKACK:
 		{
 			m_bCenterLinked = true;
-			m_pUIHandler->OnHandle(PAK_EVENT_LINK, reinterpret_cast<uintptr_t>(m_ServerInfo.NetAddr + LOGINI_CENTER), DATA_INDEX_CENTER);
+
+			NET_ADDR NetAddr;
+			m_NetworkPtr->GetAddr(krSocket, NetAddr, false);
+			m_pUIHandler->OnHandle(PAK_EVENT_LINK, reinterpret_cast<uintptr_t>(&NetAddr), DATA_INDEX_CENTER);
 			LOG_INFO(m_FileLog, TF("[登陆服务器]收到中心服务器连接回复包"));
 		}
 		break;
@@ -568,7 +566,10 @@ bool CLoginServer::DispatchLoginDBServer(const PacketPtr& PktPtr, KeyRef krSocke
 	case PAK_EVENT_LINKACK:
 		{
 			m_bLoginDBLinked = true;
-			m_pUIHandler->OnHandle(PAK_EVENT_LINK, reinterpret_cast<uintptr_t>(m_ServerInfo.NetAddr + LOGINI_LOGINDB), DATA_INDEX_LOGINDB);
+
+			NET_ADDR NetAddr;
+			m_NetworkPtr->GetAddr(krSocket, NetAddr, false);
+			m_pUIHandler->OnHandle(PAK_EVENT_LINK, reinterpret_cast<uintptr_t>(&NetAddr), DATA_INDEX_LOGINDB);
 			LOG_INFO(m_FileLog, TF("[登陆服务器]收到登陆DB服务器连接回复包"));
 		}
 		break;
@@ -583,12 +584,12 @@ bool CLoginServer::DispatchLoginDBServer(const PacketPtr& PktPtr, KeyRef krSocke
 			LOG_INFO(m_FileLog, TF("[登陆服务器]收到登陆DB服务器断接回复包"));
 		}
 		break;
-	case PAK_EVENT_LOGIN_LINK:
+	case PAK_EVENT_LOGIN_LINKACK:
 		{
 			GameLinkAck(static_cast<CPAKSessionAck*>(PktPtr.Get()));
 		}
 		break;
-	case PAK_EVENT_LOGIN_UNLINK:
+	case PAK_EVENT_LOGIN_UNLINKACK:
 		{
 			GameUnlinkAck(static_cast<CPAKSessionAck*>(PktPtr.Get()));
 		}
@@ -857,7 +858,7 @@ bool CLoginServer::OnTcpConnect(UInt uError, KeyRef krConnect)
 	if (krConnect == m_krConnectCenter) {
 		m_bCenterCnnted = (uError == 0);
 		if (m_bCenterCnnted) {
-			m_NetworkPtr->GetAddr(krConnect, m_ServerInfo.NetAddr[LOGINI_CENTER], false);
+			LinkCenterServer();
 		}
 		else {
 			DEV_INFO(TF("[登陆服务器]连接中心服务器失败%X!"), uError);
@@ -867,16 +868,12 @@ bool CLoginServer::OnTcpConnect(UInt uError, KeyRef krConnect)
 	else if (krConnect == m_krConnectLoginDB) {
 		m_bLoginDBCnnted = (uError == 0);
 		if (m_bLoginDBCnnted) {
-			m_NetworkPtr->GetAddr(krConnect, m_ServerInfo.NetAddr[LOGINI_LOGINDB], false);
+			LinkLoginDBServer();
 		}
 		else {
 			DEV_INFO(TF("[登陆服务器]连接登陆DB服务器失败%X!"), uError);
 			LOGV_WARN(m_FileLog, TF("[登陆服务器]连接登陆DB服务器失败%X!"), uError);
 		}
-	}
-	if (m_bCenterCnnted && m_bLoginDBCnnted) {
-		LinkCenterServer();
-		LinkLoginDBServer();
 	}
 	return true;
 }
@@ -982,6 +979,7 @@ bool CLoginServer::OnTcpClose(KeyRef krSocket, LLong llLiveData)
 						(pPair->m_V.nStatus < SESSION_DATA::SESSION_STATUS_UNLINK)) {
 
 						CTRefCountPtr<CPAKLoginUnlink> UnlinkPtr = MNEW CPAKLoginUnlink;
+						UnlinkPtr->SetType(PAK_TYPE_LOGIN);
 						//UnlinkPtr->SetSessionId(0); // 断开SessionId设置为0
 						UnlinkPtr->SetUserId(pPair->m_V.llUserId);
 						UnlinkPtr->SetTime(pPair->m_V.llOnline);
@@ -1082,7 +1080,7 @@ bool CLoginServer::CheckConnectCenterServer(void)
 			return false;
 		}
 	}
-	if ((m_bLoginDBCnnted == true) && (m_bCenterLinked == false)) {
+	if (m_bCenterLinked == false) {
 		LinkCenterServer();
 	}
 	return true;
@@ -1095,7 +1093,7 @@ bool CLoginServer::CheckConnectLoginDBServer(void)
 			return false;
 		}
 	}
-	if ((m_bCenterCnnted == true) && (m_bLoginDBLinked == false)) {
+	if (m_bLoginDBLinked == false) {
 		LinkLoginDBServer();
 	}
 	return true;
@@ -1180,7 +1178,7 @@ bool CLoginServer::SyncGameServerInfo(void)
 			Sync.Serialize(*StreamPtr);
 
 			bool bRet = false;
-			{ CSyncLockWaitScope scope(m_GameSvrMap.GetLock()); bRet = m_GameSvrMap.Serialize(*StreamPtr, STATUSU_SYNCXLINK|STATUSU_NOADDR); }
+			{ CSyncLockWaitScope scope(m_GameSvrMap.GetLock()); bRet = m_GameSvrMap.Serialize(*StreamPtr, STATUSU_SYNCXLINK|STATUSU_PING); }
 			if (bRet) {
 				if (m_NetworkPtr->Send(nullptr, *StreamPtr, SEND_BROADCAST_AS, PAK_TYPE_CLIENT_LOGIN)) {
 					CSyncLockWaitScope scope(m_GameSvrMap.GetLock());
@@ -1219,7 +1217,7 @@ void CLoginServer::GameLinkAck(CPAKSessionAck* pAck)
 				pAck->Serialize(*StreamPtr);
 				StreamPtr->Write(&m_GameInfo, sizeof(SERVER_INFO));
 
-				{ CSyncLockWaitScope gamescope(m_GameSvrMap.GetLock());  m_GameSvrMap.Serialize(*StreamPtr, STATUSU_OKAYSYNC|STATUSU_NOADDR); }
+				{ CSyncLockWaitScope gamescope(m_GameSvrMap.GetLock());  m_GameSvrMap.Serialize(*StreamPtr, STATUSU_OKAYSYNC|STATUSU_PING); }
 
 				m_NetworkPtr->Send((KeyRef)pPair->m_K, *StreamPtr);
 				m_NetworkPtr->SetAttr((KeyRef)pPair->m_K, PAK_TYPE_CLIENT_LOGIN);

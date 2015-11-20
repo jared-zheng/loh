@@ -22,7 +22,7 @@
 BEGIN_DLG_ID_WND_EXCHANGE( CSelectDlg )
 DLG_ID_WND( IDC_CONNECT_CENTER, m_ConnectCenter )
 DLG_ID_WND( IDC_UDP_SERVICE,    m_UDPService )
-DLG_ID_WND( IDC_SELECT_INFO,    m_ServerInfo)
+DLG_ID_WND( IDC_SELECT_INFO,    m_ServerInfo )
 DLG_ID_WND( IDD_LOGIN,          m_LoginSvr )
 END_DLG_ID_WND_EXCHANGE( CXDlg )
 
@@ -78,10 +78,10 @@ void CSelectDlg::OnLive(bool bStart)
 	if (bStart) {
 		strTemp.Load(IDC_UDP_SERVICE);
 
-		Int        nPort = 0;
+		UShort     usPort = 0;
 		CStringKey strAddr;
-		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_SELECT, 0, strAddr, nPort);
-		strTemp.AppendFormat(TF("[%s]%d"), *strAddr, nPort);
+		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_SELECT, 0, strAddr, usPort);
+		strTemp.AppendFormat(TF("[%s]%d"), *strAddr, usPort);
 		m_UDPService.SetWindowText(*strTemp);
 	}
 	else {
@@ -104,13 +104,12 @@ void CSelectDlg::OnLink(Int nServerIndex, uintptr_t utParam)
 	if (utParam != 0) {
 		CNETTraits::PNET_ADDR pAddr = (reinterpret_cast<CNETTraits::PNET_ADDR>(utParam));
 
-		Int        nPort = 0;
+		UShort     usPort = 0;
 		CStringKey strAddr;
 
-		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_SELECT, strAddr, nPort);
-		strTemp.AppendFormat(TF("[%s]%d"), *strAddr, nPort);
+		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_SELECT, strAddr, usPort);
+		strTemp.AppendFormat(TF("[%s]%d"), *strAddr, usPort);
 
-		UShort usPort = 0;
 		GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pAddr, false);
 		strTemp.AppendFormat(TF("([%s]%d)"), *strAddr, usPort);
 	}

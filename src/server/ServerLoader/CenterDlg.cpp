@@ -19,13 +19,13 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CCenterDlg
 BEGIN_DLG_ID_WND_EXCHANGE( CCenterDlg )
-DLG_ID_WND( IDC_SELECT_ADDR,  m_ListenSelect )
-DLG_ID_WND( IDC_LOGIN_ADDR,   m_ListenLogin )
-DLG_ID_WND( IDC_GAME_ADDR,    m_ListenGame )
-DLG_ID_WND( IDC_CENTER_INFO,  m_ServerInfo)
-DLG_ID_WND( IDD_SELECT,       m_SelectSvr )
-DLG_ID_WND( IDD_LOGIN,        m_LoginSvr )
-DLG_ID_WND( IDD_GAME,         m_GameSvr )
+DLG_ID_WND( IDC_LISTEN_SELECT,  m_ListenSelect )
+DLG_ID_WND( IDC_LISTEN_LOGIN,   m_ListenLogin )
+DLG_ID_WND( IDC_LISTEN_GAME,    m_ListenGame )
+DLG_ID_WND( IDC_CENTER_INFO,    m_ServerInfo )
+DLG_ID_WND( IDD_SELECT,         m_SelectSvr )
+DLG_ID_WND( IDD_LOGIN,          m_LoginSvr )
+DLG_ID_WND( IDD_GAME,           m_GameSvr )
 END_DLG_ID_WND_EXCHANGE( CXDlg )
 
 CCenterDlg::CCenterDlg(void)
@@ -63,13 +63,13 @@ LRESULT CCenterDlg::OnInitDialog(void)
 	m_GameSvr.MoveWindow(0, rc.top, rc.right, lHeight);
 	//
 	CStringFix strTemp;
-	strTemp.Load(IDC_SELECT_ADDR);
+	strTemp.Load(IDC_LISTEN_SELECT);
 	m_ListenSelect.SetWindowText(*strTemp);
 
-	strTemp.Load(IDC_LOGIN_ADDR);
+	strTemp.Load(IDC_LISTEN_LOGIN);
 	m_ListenLogin.SetWindowText(*strTemp);
 
-	strTemp.Load(IDC_GAME_ADDR);
+	strTemp.Load(IDC_LISTEN_GAME);
 	m_ListenGame.SetWindowText(*strTemp);
 	//
 	InitListViewItem(DATA_INDEX_SELECT);
@@ -101,34 +101,46 @@ LRESULT CCenterDlg::OnSize(WPARAM, LPARAM lParam, BOOL&)
 void CCenterDlg::OnLive(bool bStart)
 {
 	if (bStart) {
-		Int        nPort = 0;
+		UShort     usPort = 0;
 		CStringKey strAddr;
 
 		CStringFix strTemp;
-		strTemp.Load(IDC_SELECT_ADDR);
-		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_SELECT, strAddr, nPort);
-		strTemp.AppendFormat(TF("[%s]%d"), *strAddr, nPort);
+		strTemp.Load(IDC_LISTEN_SELECT);
+		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_SELECT, strAddr, usPort);
+		strTemp.AppendFormat(TF("[%s]%d"), *strAddr, usPort);
 		m_ListenSelect.SetWindowText(*strTemp);
 
-		strTemp.Load(IDC_LOGIN_ADDR);
-		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_LOGIN, strAddr, nPort);
-		strTemp.AppendFormat(TF("[%s]%d"), *strAddr, nPort);
+		strTemp.Load(IDC_LISTEN_LOGIN);
+		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_LOGIN, strAddr, usPort);
+		if (usPort > 0) {
+			strTemp.AppendFormat(TF("[%s]%d"), *strAddr, usPort);
+		}
+		else {
+			strAddr.Load(IDS_SHARE_LISTEN);
+			strTemp += strAddr;
+		}
 		m_ListenLogin.SetWindowText(*strTemp);
 
-		strTemp.Load(IDC_GAME_ADDR);
-		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_GAME, strAddr, nPort);
-		strTemp.AppendFormat(TF("[%s]%d"), *strAddr, nPort);
+		strTemp.Load(IDC_LISTEN_GAME);
+		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_GAME, strAddr, usPort);
+		if (usPort > 0) {
+			strTemp.AppendFormat(TF("[%s]%d"), *strAddr, usPort);
+		}
+		else {
+			strAddr.Load(IDS_SHARE_LISTEN);
+			strTemp += strAddr;
+		}
 		m_ListenGame.SetWindowText(*strTemp);
 	}
 	else {
 		CStringFix strTemp;
-		strTemp.Load(IDC_SELECT_ADDR);
+		strTemp.Load(IDC_LISTEN_SELECT);
 		m_ListenSelect.SetWindowText(*strTemp);
 
-		strTemp.Load(IDC_LOGIN_ADDR);
+		strTemp.Load(IDC_LISTEN_LOGIN);
 		m_ListenLogin.SetWindowText(*strTemp);
 
-		strTemp.Load(IDC_GAME_ADDR);
+		strTemp.Load(IDC_LISTEN_GAME);
 		m_ListenGame.SetWindowText(*strTemp);
 	}
 	m_ServerInfo.SetWindowText(TF(""));

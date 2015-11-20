@@ -149,40 +149,52 @@ bool CCenterServer::Start(void)
 // 运行创建监听选择, 登陆和游戏服务器连接的连接对象
 bool CCenterServer::StartListenServers(void)
 {
-	Int        nPort = 0;
+	UShort     usPort = 0;
 	CStringKey strAddr;
 	// select
-	if ((m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_SELECT, strAddr, nPort) == false) || 
-		(StartListenServer(m_krListenSelect, strAddr, nPort) == false)) {
+	if ((m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_SELECT, strAddr, usPort) == false) || 
+		(StartListenServer(m_krListenSelect, strAddr, usPort) == false)) {
 		return false;
 	}
 	// login
-	if ((m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_LOGIN, strAddr, nPort) == false) ||
-		(StartListenServer(m_krListenLogin, strAddr, nPort) == false)) {
+	if (m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_LOGIN, strAddr, usPort) == false) {
+		return false;
+	}
+	if (usPort == 0) {
+		m_krListenLogin = (KeyRef)this; // 与select相同监听地址
+		LOG_INFO(m_FileLog, TF("[中心服务器]监听登陆服务器地址和监听选择服务器地址一样"));
+	}
+	else if (StartListenServer(m_krListenLogin, strAddr, usPort) == false) {
 		return false;
 	}
 	// game
-	if ((m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_GAME, strAddr, nPort) == false) ||
-		(StartListenServer(m_krListenGame, strAddr, nPort) == false)) {
+	if (m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_GAME, strAddr, usPort) == false) {
+		return false;
+	}
+	if (usPort == 0) {
+		m_krListenGame = (KeyRef)this; // 与select或者login相同监听地址
+		LOG_INFO(m_FileLog, TF("[中心服务器]监听游戏服务器地址和监听选择服务器或者登陆服务器地址一样"));
+	}
+	else if (StartListenServer(m_krListenGame, strAddr, usPort) == false) {
 		return false;
 	}
 	return true;
 }
 // 运行创建监听服务器的连接
-bool CCenterServer::StartListenServer(KeyRef& krListen, const CStringKey& strAddr, Int nPort)
+bool CCenterServer::StartListenServer(KeyRef& krListen, const CStringKey& strAddr, UShort usPort)
 {
 	if (krListen != nullptr) {
-		LOGV_INFO(m_FileLog, TF("[中心服务器]创建监听服务器连接[%s]:%d的连接已经存在"), *strAddr, nPort);
+		LOGV_INFO(m_FileLog, TF("[中心服务器]创建监听服务器连接[%s]:%d的连接已经存在"), *strAddr, usPort);
 		return true;
 	}
 	bool bRet = true;
-	krListen = m_NetworkPtr->Create(*this, (UShort)nPort, *strAddr);
+	krListen = m_NetworkPtr->Create(*this, usPort, *strAddr);
 	if (krListen != nullptr) {
 		bRet = m_NetworkPtr->Listen(krListen);
-		LOGV_INFO(m_FileLog, TF("[中心服务器]创建监听服务器的连接[%s]:%d成功, %s"), *strAddr, nPort, bRet ? TF("监听连接成功") : TF("监听连接失败"));
+		LOGV_INFO(m_FileLog, TF("[中心服务器]创建监听服务器的连接[%s]:%d成功, %s"), *strAddr, usPort, bRet ? TF("监听连接成功") : TF("监听连接失败"));
 	}
 	else {
-		LOGV_ERROR(m_FileLog, TF("[中心服务器]创建监听服务器的连接[%s]:%d失败"), *strAddr, nPort);
+		LOGV_ERROR(m_FileLog, TF("[中心服务器]创建监听服务器的连接[%s]:%d失败"), *strAddr, usPort);
 		bRet = false;
 	}
 	return bRet;
@@ -205,7 +217,7 @@ bool CCenterServer::Pause(bool bPause)
 //--------------------------------------
 void CCenterServer::Stop(void)
 {
-	if (m_nStatus > STATUSC_INIT) {
+	if (m_nStatus > STATUSC_NONE) {
 		LOG_INFO(m_FileLog, TF("[中心服务器]中心服务停止开始!"));
 
 		StopListenServers();
@@ -235,12 +247,16 @@ void CCenterServer::StopListenServers(void)
 		LOG_INFO(m_FileLog, TF("[中心服务器]销毁监听选择服务器的连接成功"));
 	}
 	if (m_krListenLogin != nullptr) {
-		m_NetworkPtr->Destroy(m_krListenLogin, false);
+		if (m_krListenLogin != (KeyRef)this) {
+			m_NetworkPtr->Destroy(m_krListenLogin, false);
+		}
 		m_krListenLogin = nullptr;
 		LOG_INFO(m_FileLog, TF("[中心服务器]销毁监听登陆服务器的连接成功"));
 	}
 	if (m_krListenGame != nullptr) {
-		m_NetworkPtr->Destroy(m_krListenGame, false);
+		if (m_krListenGame != (KeyRef)this) {
+			m_NetworkPtr->Destroy(m_krListenGame, false);
+		}
 		m_krListenGame = nullptr;
 		LOG_INFO(m_FileLog, TF("[中心服务器]销毁监听游戏服务器的连接成功"));
 	}
@@ -535,22 +551,14 @@ bool CCenterServer::OnServerUnlink(CPAKHead* pUnlink, KeyRef krSocket)
 	return bRet;
 }
 //--------------------------------------
-bool CCenterServer::OnTcpAccept(KeyRef krAccept, KeyRef krListen)
+bool CCenterServer::OnTcpAccept(KeyRef krAccept, KeyRef)
 {
 	if (m_nStatus == STATUSC_RUN) {
 		UShort     usPort = 0;
 		CStringKey strAddr;
 		m_NetworkPtr->GetAddr(krAccept, strAddr, usPort);
+		DEV_INFO(TF("[中心服务器]服务器[%s]:%d连接完成!"), *strAddr, usPort);
 
-		if (krListen == m_krListenGame) {
-			DEV_INFO(TF("[中心服务器]选择服务器[%s]:%d连接完成!"), *strAddr, usPort);
-		}
-		else if (krListen == m_krListenLogin) {
-			DEV_INFO(TF("[中心服务器]登陆服务器[%s]:%d连接完成!"), *strAddr, usPort);
-		}
-		else if (krListen == m_krListenSelect) {
-			DEV_INFO(TF("[中心服务器]选择服务器[%s]:%d连接完成!"), *strAddr, usPort);
-		}
 		m_ServerInfo[INFOI_CENTER].Incr();
 		return true;
 	}
@@ -609,10 +617,10 @@ bool CCenterServer::CheckListenServers(void)
 bool CCenterServer::CheckListenSelectServer(void)
 {
 	if (m_krListenSelect == nullptr){
-		Int        nPort = 0;
+		UShort     usPort = 0;
 		CStringKey strAddr;
-		if ((m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_SELECT, strAddr, nPort) == false) ||
-			(StartListenServer(m_krListenSelect, strAddr, nPort) == false)){
+		if ((m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_SELECT, strAddr, usPort) == false) ||
+			(StartListenServer(m_krListenSelect, strAddr, usPort) == false)){
 			return false;
 		}
 	}
@@ -622,10 +630,10 @@ bool CCenterServer::CheckListenSelectServer(void)
 bool CCenterServer::CheckListenLoginServer(void)
 {
 	if (m_krListenLogin == nullptr){
-		Int        nPort = 0;
+		UShort     usPort = 0;
 		CStringKey strAddr;
-		if ((m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_LOGIN, strAddr, nPort) == false) ||
-			(StartListenServer(m_krListenLogin, strAddr, nPort) == false)){
+		if ((m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_LOGIN, strAddr, usPort) == false) ||
+			(StartListenServer(m_krListenLogin, strAddr, usPort) == false)){
 			return false;
 		}
 	}
@@ -635,10 +643,10 @@ bool CCenterServer::CheckListenLoginServer(void)
 bool CCenterServer::CheckListenGameServer(void)
 {
 	if (m_krListenGame == nullptr){
-		Int        nPort = 0;
+		UShort     usPort = 0;
 		CStringKey strAddr;
-		if ((m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_GAME, strAddr, nPort) == false) ||
-		    (StartListenServer(m_krListenGame, strAddr, nPort) == false)){
+		if ((m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_GAME, strAddr, usPort) == false) ||
+		    (StartListenServer(m_krListenGame, strAddr, usPort) == false)){
 			return false;
 		}
 	}

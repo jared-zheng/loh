@@ -42,9 +42,6 @@ public:
 public:
 	CGameServer(void);
 	virtual ~CGameServer(void);
-	// CTRefCount
-	//virtual Long   AddRef(void) OVERRIDE;
-	virtual Long   Release(void) OVERRIDE;
 	// CComponent
 	// Command to set param value
 	virtual UInt   Command(PCXStr pszCMD, uintptr_t utParam) OVERRIDE;
@@ -241,15 +238,6 @@ INLINE CGameServer::CGameServer(const CGameServer&)
 INLINE CGameServer& CGameServer::operator=(const CGameServer&)
 {
 	return (*this);
-}
-
-INLINE Long CGameServer::Release(void)
-{
-	Long lRef = m_Counter.Reset();
-	if (lRef == 0){
-		MDELETE this;
-	}
-	return lRef;
 }
 
 INLINE bool CGameServer::OnShareRoutine(Int, uintptr_t, LLong, CEventQueue::EVENT_TYPE)

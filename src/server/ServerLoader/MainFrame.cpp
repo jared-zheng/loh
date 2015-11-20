@@ -332,8 +332,8 @@ void CMainFrame::OnStart(void)
 		FrameLayout();
 	}
 	else {
-		GServerLoaderInst->UnloadServers();
 		GServerLoaderInst->StopServers();
+		GServerLoaderInst->UnloadServers();
 	}
 }
 

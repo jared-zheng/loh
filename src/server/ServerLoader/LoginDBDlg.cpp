@@ -19,9 +19,9 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CLoginDBDlg
 BEGIN_DLG_ID_WND_EXCHANGE( CLoginDBDlg )
-DLG_ID_WND( IDC_LOGIN_ADDR,   m_ListenLogin )
-DLG_ID_WND( IDC_LOGINDB_INFO, m_ServerInfo)
-DLG_ID_WND( IDD_LOGIN,        m_LoginSvr )
+DLG_ID_WND( IDC_LISTEN_LOGIN,   m_ListenLogin )
+DLG_ID_WND( IDC_LOGINDB_INFO,   m_ServerInfo )
+DLG_ID_WND( IDD_LOGIN,          m_LoginSvr )
 END_DLG_ID_WND_EXCHANGE( CXDlg )
 
 CLoginDBDlg::CLoginDBDlg(void)
@@ -45,7 +45,7 @@ LRESULT CLoginDBDlg::OnInitDialog(void)
 	m_LoginSvr.MoveWindow(0, rc.top, rc.right, (rc.bottom - rc.top));
 	//
 	CStringFix strTemp;
-	strTemp.Load(IDC_LOGIN_ADDR);
+	strTemp.Load(IDC_LISTEN_LOGIN);
 	m_ListenLogin.SetWindowText(*strTemp);
 	//
 	InitListViewItem(DATA_INDEX_LOGIN);
@@ -69,14 +69,14 @@ LRESULT CLoginDBDlg::OnSize(WPARAM, LPARAM lParam, BOOL&)
 void CLoginDBDlg::OnLive(bool bStart)
 {
 	CStringFix strTemp;
-	strTemp.Load(IDC_LOGIN_ADDR);
+	strTemp.Load(IDC_LISTEN_LOGIN);
 	
 	if (bStart){
-		Int        nPort = 0;
+		UShort     usPort = 0;
 		CStringKey strAddr;
 
-		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_LOGINDB, 0, strAddr, nPort);
-		strTemp.AppendFormat(TF("[%s]%d"), *strAddr, nPort);
+		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_LOGINDB, 0, strAddr, usPort);
+		strTemp.AppendFormat(TF("[%s]%d"), *strAddr, usPort);
 		m_ListenLogin.SetWindowText(*strTemp);
 	}
 	else{

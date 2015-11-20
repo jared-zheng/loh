@@ -122,14 +122,14 @@ protected :
 	END_CHAIN_MSG_MAP( CXDlg )
 private:
 	void Update(void);
-	void Link(DataRef drKey, SERVER_DATA& sd);
+	void Link(DataRef drKey, SERVER_DATA& sd, CNETTraits::NET_ADDR* pAddr);
 	void Update(Int nIndex, SERVER_DATA& sd);
 public:
 	Int                   m_nGameId;
 	LLong                 m_llGameKey;
 	SERVER_DATA           m_ServerData;
 	CXListView            m_xuiGameSvr;
-	SVR_SERVER_MAP        m_ServerMap;
+	SVR_TEST_MAP          m_ServerMap;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -144,7 +144,7 @@ public:
 		FRAMEC_TICK_ID     = 1000,
 		FRAMEC_TICK_TIME   = 30000,
 
-		FRAMEC_SELECTPORT  = 10081,
+		FRAMEC_SELECTPORT  = 10010,
 
 		FRAMEC_WIDTH       = 800,
 		FRAMEC_HEIGHT      = 600,

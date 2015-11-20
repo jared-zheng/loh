@@ -22,8 +22,9 @@
 BEGIN_DLG_ID_WND_EXCHANGE( CGameDlg )
 DLG_ID_WND( IDC_CONNECT_CENTER, m_ConnectCenter )
 DLG_ID_WND( IDC_CONNECT_GAMEDB, m_ConnectGameDB )
-DLG_ID_WND( IDC_ZONE_ADDR,      m_ListenZone )
-DLG_ID_WND( IDC_GATE_ADDR,      m_ListenGate )
+DLG_ID_WND( IDC_PING_SERVICE,   m_PingService )
+DLG_ID_WND( IDC_LISTEN_ZONE,    m_ListenZone )
+DLG_ID_WND( IDC_LISTEN_GATE,    m_ListenGate )
 DLG_ID_WND( IDC_UDP_SERVICE,    m_UDPService )
 DLG_ID_WND( IDC_GAME_INFO,      m_ServerInfo )
 DLG_ID_WND( IDD_ZONE,           m_ZoneSvr )
@@ -67,10 +68,13 @@ LRESULT CGameDlg::OnInitDialog(void)
 	strTemp.Load(IDC_CONNECT_GAMEDB);
 	m_ConnectGameDB.SetWindowText(*strTemp);
 
-	strTemp.Load(IDC_ZONE_ADDR);
+	strTemp.Load(IDC_PING_SERVICE);
+	m_PingService.SetWindowText(*strTemp);
+
+	strTemp.Load(IDC_LISTEN_ZONE);
 	m_ListenZone.SetWindowText(*strTemp);
 
-	strTemp.Load(IDC_GATE_ADDR);
+	strTemp.Load(IDC_LISTEN_GATE);
 	m_ListenGate.SetWindowText(*strTemp);
 
 	strTemp.Load(IDC_UDP_SERVICE);
@@ -104,23 +108,28 @@ void CGameDlg::OnLive(bool bStart)
 {
 	CStringFix strTemp;
 	if (bStart){
-		Int        nPort = 0;
+		UShort     usPort = 0;
 		CStringKey strAddr;
 
-		strTemp.Load(IDC_ZONE_ADDR);
-		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_GAME, CServerConfig::CFG_DEFAULT_ZONE, strAddr, nPort);
-		strTemp.AppendFormat(TF("[%s]%d"), *strAddr, nPort);
+		strTemp.Load(IDC_PING_SERVICE);
+		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_GAME, 0, strAddr, usPort);
+		m_PingService.SetWindowText(*strAddr);
+
+		strTemp.Load(IDC_LISTEN_ZONE);
+		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_GAME, CServerConfig::CFG_DEFAULT_ZONE, strAddr, usPort);
+		strTemp.AppendFormat(TF("[%s]%d"), *strAddr, usPort);
 		m_ListenZone.SetWindowText(*strTemp);
 
-		strTemp.Load(IDC_GATE_ADDR);
-		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_GAME, 0, strAddr, nPort);
-		strTemp.AppendFormat(TF("[%s]%d"), *strAddr, nPort);
+		strTemp.Load(IDC_LISTEN_GATE);
+		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_GAME, CServerConfig::CFG_DEFAULT_GATE, strAddr, usPort);
+		if (usPort > 0) {
+			strTemp.AppendFormat(TF("[%s]%d"), *strAddr, usPort);
+		}
+		else {
+			strAddr.Load(IDS_SHARE_LISTEN);
+			strTemp += strAddr;
+		}
 		m_ListenGate.SetWindowText(*strTemp);
-
-		strTemp.Load(IDC_UDP_SERVICE);
-		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_GAME, CServerConfig::CFG_DEFAULT_LOGIN, strAddr, nPort);
-		strTemp.AppendFormat(TF("[%s]%d"), *strAddr, nPort);
-		m_UDPService.SetWindowText(*strTemp);
 	}
 	else{
 		strTemp.Load(IDC_CONNECT_CENTER);
@@ -129,10 +138,13 @@ void CGameDlg::OnLive(bool bStart)
 		strTemp.Load(IDC_CONNECT_GAMEDB);
 		m_ConnectGameDB.SetWindowText(*strTemp);
 
-		strTemp.Load(IDC_ZONE_ADDR);
+		strTemp.Load(IDC_PING_SERVICE);
+		m_PingService.SetWindowText(*strTemp);
+
+		strTemp.Load(IDC_LISTEN_ZONE);
 		m_ListenZone.SetWindowText(*strTemp);
 
-		strTemp.Load(IDC_GATE_ADDR);
+		strTemp.Load(IDC_LISTEN_GATE);
 		m_ListenGate.SetWindowText(*strTemp);
 
 		strTemp.Load(IDC_UDP_SERVICE);
@@ -151,13 +163,12 @@ void CGameDlg::OnLink(Int nServerIndex, uintptr_t utParam)
 		if (utParam != 0) {
 			CNETTraits::PNET_ADDR pAddr = (reinterpret_cast<CNETTraits::PNET_ADDR>(utParam));
 
-			Int        nPort = 0;
+			UShort     usPort = 0;
 			CStringKey strAddr;
 
-			GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_GAME, strAddr, nPort);
-			strTemp.AppendFormat(TF("[%s]%d"), *strAddr, nPort);
+			GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_GAME, strAddr, usPort);
+			strTemp.AppendFormat(TF("[%s]%d"), *strAddr, usPort);
 
-			UShort usPort = 0;
 			GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pAddr, false);
 			strTemp.AppendFormat(TF("([%s]%d)"), *strAddr, usPort);
 		}
@@ -175,13 +186,12 @@ void CGameDlg::OnLink(Int nServerIndex, uintptr_t utParam)
 		if (utParam != 0) {
 			CNETTraits::PNET_ADDR pAddr = (reinterpret_cast<CNETTraits::PNET_ADDR>(utParam));
 
-			Int        nPort = 0;
+			UShort     usPort = 0;
 			CStringKey strAddr;
 
-			GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_GAMEDB, 0, strAddr, nPort);
-			strTemp.AppendFormat(TF("[%s]%d"), *strAddr, nPort);
+			GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_GAMEDB, 0, strAddr, usPort);
+			strTemp.AppendFormat(TF("[%s]%d"), *strAddr, usPort);
 
-			UShort usPort = 0;
 			GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pAddr, false);
 			strTemp.AppendFormat(TF("([%s]%d)"), *strAddr, usPort);
 		}
@@ -191,6 +201,17 @@ void CGameDlg::OnLink(Int nServerIndex, uintptr_t utParam)
 			strTemp += strTemp1;
 		}
 		m_ConnectGameDB.SetWindowText(*strTemp);
+	}
+	else if (nServerIndex == DATA_INDEX_GAME) {
+		strTemp.Load(IDC_UDP_SERVICE);
+
+		CNETTraits::PNET_ADDR pAddr = (reinterpret_cast<CNETTraits::PNET_ADDR>(utParam));
+
+		UShort     usPort = 0;
+		CStringKey strAddr;
+		GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pAddr, false);
+		strTemp.AppendFormat(TF("[%s]%d"), *strAddr, usPort);
+		m_UDPService.SetWindowText(*strTemp);
 	}
 	else {
 		assert((nServerIndex == DATA_INDEX_ZONE) || (nServerIndex == DATA_INDEX_GATE));

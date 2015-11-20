@@ -152,19 +152,19 @@ bool CGameDBServer::Start(void)
 // 运行创建监听游戏服务器连接的连接对象
 bool CGameDBServer::StartListenGameServer(void)
 {
-	Int        nPort = 0;
+	UShort     usPort = 0;
 	CStringKey strAddr;
-	m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_GAMEDB, 0, strAddr, nPort);
+	m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_GAMEDB, 0, strAddr, usPort);
 
 	assert(m_krListenGame == nullptr);
 	bool bRet = true;
-	m_krListenGame = m_NetworkPtr->Create(*this, (UShort)nPort, *strAddr);
+	m_krListenGame = m_NetworkPtr->Create(*this, usPort, *strAddr);
 	if (m_krListenGame != nullptr) {
 		bRet = m_NetworkPtr->Listen(m_krListenGame);
-		LOGV_INFO(m_FileLog, TF("[游戏DB服务器]创建监听游戏服务器的连接[%s]:%d成功, %s"), *strAddr, nPort, bRet ? TF("监听连接成功") : TF("监听连接失败"));
+		LOGV_INFO(m_FileLog, TF("[游戏DB服务器]创建监听游戏服务器的连接[%s]:%d成功, %s"), *strAddr, usPort, bRet ? TF("监听连接成功") : TF("监听连接失败"));
 	}
 	else {
-		LOGV_ERROR(m_FileLog, TF("[游戏DB服务器]创建监听游戏服务器的连接[%s]:%d失败"), *strAddr, nPort);
+		LOGV_ERROR(m_FileLog, TF("[游戏DB服务器]创建监听游戏服务器的连接[%s]:%d失败"), *strAddr, usPort);
 		bRet = false;
 	}
 	return bRet;
@@ -172,19 +172,24 @@ bool CGameDBServer::StartListenGameServer(void)
 // 运行创建监听网关服务器连接的连接对象
 bool CGameDBServer::StartListenGateServer(void)
 {
-	Int        nPort = 0;
+	UShort     usPort = 0;
 	CStringKey strAddr;
-	m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_GAMEDB, CServerConfig::CFG_DEFAULT_GATE, strAddr, nPort);
+	m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_GAMEDB, CServerConfig::CFG_DEFAULT_GATE, strAddr, usPort);
+	if (usPort == 0) {
+		m_krListenGate = (KeyRef)this; // 与gamr相同监听地址
+		LOG_INFO(m_FileLog, TF("[游戏DB服务器]监听网关服务器地址和监听游戏服务器地址一样"));
+		return true;
+	}
 
 	assert(m_krListenGate == nullptr);
 	bool bRet = true;
-	m_krListenGate = m_NetworkPtr->Create(*this, (UShort)nPort, *strAddr);
+	m_krListenGate = m_NetworkPtr->Create(*this, usPort, *strAddr);
 	if (m_krListenGate != nullptr) {
 		bRet = m_NetworkPtr->Listen(m_krListenGate);
-		LOGV_INFO(m_FileLog, TF("[游戏DB服务器]创建监听网关服务器的连接[%s]:%d成功, %s"), *strAddr, nPort, bRet ? TF("监听连接成功") : TF("监听连接失败"));
+		LOGV_INFO(m_FileLog, TF("[游戏DB服务器]创建监听网关服务器的连接[%s]:%d成功, %s"), *strAddr, usPort, bRet ? TF("监听连接成功") : TF("监听连接失败"));
 	}
 	else {
-		LOGV_ERROR(m_FileLog, TF("[游戏DB服务器]创建监听网关服务器的连接[%s]:%d失败"), *strAddr, nPort);
+		LOGV_ERROR(m_FileLog, TF("[游戏DB服务器]创建监听网关服务器的连接[%s]:%d失败"), *strAddr, usPort);
 		bRet = false;
 	}
 	return bRet;
@@ -209,7 +214,7 @@ bool CGameDBServer::Pause(bool bPause)
 //--------------------------------------
 void CGameDBServer::Stop(void)
 {
-	if (m_nStatus > STATUSC_INIT) {
+	if (m_nStatus > STATUSC_NONE) {
 		LOG_INFO(m_FileLog, TF("[游戏DB服务器]游戏DB服务停止开始!"));
 
 		m_GameDBRoutine->Stop();
@@ -241,7 +246,9 @@ void CGameDBServer::StopListenGameServer(void)
 void CGameDBServer::StopListenGateServer(void)
 {
 	if (m_krListenGate != nullptr) {
-		m_NetworkPtr->Destroy(m_krListenGate, false);
+		if (m_krListenGate != (KeyRef)this) {
+			m_NetworkPtr->Destroy(m_krListenGate, false);
+		}
 		m_krListenGate = nullptr;
 		LOG_INFO(m_FileLog, TF("[游戏DB服务器]销毁监听网关服务器的连接成功"));
 	}

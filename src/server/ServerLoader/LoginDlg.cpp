@@ -22,10 +22,10 @@
 BEGIN_DLG_ID_WND_EXCHANGE( CLoginDlg )
 DLG_ID_WND( IDC_CONNECT_CENTER,  m_ConnectCenter )
 DLG_ID_WND( IDC_CONNECT_LOGINDB, m_ConnectLoginDB )
-DLG_ID_WND( IDC_TCP_SERVICE,     m_TCPService)
-DLG_ID_WND( IDC_UDP_SERVICE,     m_UDPService)
-DLG_ID_WND( IDC_LOGIN_INFO,      m_ServerInfo)
-DLG_ID_WND( IDD_GAME,            m_GameSvr)
+DLG_ID_WND( IDC_TCP_SERVICE,     m_TCPService )
+DLG_ID_WND( IDC_UDP_SERVICE,     m_UDPService )
+DLG_ID_WND( IDC_LOGIN_INFO,      m_ServerInfo )
+DLG_ID_WND( IDD_GAME,            m_GameSvr )
 END_DLG_ID_WND_EXCHANGE( CXDlg )
 
 CLoginDlg::CLoginDlg(void)
@@ -88,18 +88,13 @@ void CLoginDlg::OnLive(bool bStart)
 {
 	CStringFix strTemp;
 	if (bStart){
-		Int        nPort = 0;
+		UShort     usPort = 0;
 		CStringKey strAddr;
 
 		strTemp.Load(IDC_TCP_SERVICE);
-		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_LOGIN, 0, strAddr, nPort);
-		strTemp.AppendFormat(TF("[%s]%d"), *strAddr, nPort);
+		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_LOGIN, 0, strAddr, usPort);
+		strTemp.AppendFormat(TF("[%s]%d"), *strAddr, usPort);
 		m_TCPService.SetWindowText(*strTemp);
-
-		strTemp.Load(IDC_UDP_SERVICE);
-		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_LOGIN, CServerConfig::CFG_DEFAULT_GAME, strAddr, nPort);
-		strTemp.AppendFormat(TF("[%s]%d"), *strAddr, nPort);
-		m_UDPService.SetWindowText(*strTemp);
 	}
 	else{
 		strTemp.Load(IDC_CONNECT_CENTER);
@@ -127,13 +122,12 @@ void CLoginDlg::OnLink(Int nServerIndex, uintptr_t utParam)
 		if (utParam != 0) {
 			CNETTraits::PNET_ADDR pAddr = (reinterpret_cast<CNETTraits::PNET_ADDR>(utParam));
 
-			Int        nPort = 0;
+			UShort     usPort = 0;
 			CStringKey strAddr;
 
-			GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_LOGIN, strAddr, nPort);
-			strTemp.AppendFormat(TF("[%s]%d"), *strAddr, nPort);
+			GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_LOGIN, strAddr, usPort);
+			strTemp.AppendFormat(TF("[%s]%d"), *strAddr, usPort);
 
-			UShort usPort = 0;
 			GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pAddr, false);
 			strTemp.AppendFormat(TF("([%s]%d)"), *strAddr, usPort);
 		}
@@ -151,13 +145,12 @@ void CLoginDlg::OnLink(Int nServerIndex, uintptr_t utParam)
 		if (utParam != 0) {
 			CNETTraits::PNET_ADDR pAddr = (reinterpret_cast<CNETTraits::PNET_ADDR>(utParam));
 
-			Int        nPort = 0;
+			UShort     usPort = 0;
 			CStringKey strAddr;
 
-			GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_LOGINDB, 0, strAddr, nPort);
-			strTemp.AppendFormat(TF("[%s]%d"), *strAddr, nPort);
+			GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_LOGINDB, 0, strAddr, usPort);
+			strTemp.AppendFormat(TF("[%s]%d"), *strAddr, usPort);
 
-			UShort usPort = 0;
 			GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pAddr, false);
 			strTemp.AppendFormat(TF("([%s]%d)"), *strAddr, usPort);
 		}
@@ -167,6 +160,17 @@ void CLoginDlg::OnLink(Int nServerIndex, uintptr_t utParam)
 			strTemp += strTemp1;
 		}
 		m_ConnectLoginDB.SetWindowText(*strTemp);
+	}
+	else if (nServerIndex == DATA_INDEX_LOGIN) {
+		strTemp.Load(IDC_UDP_SERVICE);
+
+		CNETTraits::PNET_ADDR pAddr = (reinterpret_cast<CNETTraits::PNET_ADDR>(utParam));
+
+		UShort     usPort = 0;
+		CStringKey strAddr;
+		GServerLoaderInst->m_NetworkPtr->TranslateAddr(strAddr, usPort, *pAddr, false);
+		strTemp.AppendFormat(TF("[%s]%d"), *strAddr, usPort);
+		m_UDPService.SetWindowText(*strTemp);
 	}
 }
 
@@ -186,7 +190,7 @@ void CLoginDlg::OnSync(Int nServerIndex, uintptr_t utParam)
 		PSERVER_DATA pData = reinterpret_cast<PSERVER_DATA>(utParam);
 		m_uLoginOnline = pData->uOnline;
 		m_uLoginAll    = pData->uAllCount;
-		m_uLoginBusy   = pData->usBusy;
+		m_uLoginBusy   = pData->usBusy / DATAD_PERCENT;
 	}
 }
 
@@ -194,7 +198,7 @@ void CLoginDlg::OnSync(Int nServerIndex, CStream& Stream)
 {
 	assert(nServerIndex == DATA_INDEX_GAME);
 
-	SVR_LOGIN_MAP::SVR_PAIR Pair;
+	SVR_GAME_MAP::SVR_PAIR Pair;
 	while (Stream.IsEnd() == false) {
 		Pair.Serialize(Stream);
 
