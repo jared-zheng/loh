@@ -5,7 +5,7 @@
 //   Header File : selectpacket.h                               //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
+//   Update : 2015-11-25     version 0.0.0.5                    //
 //   Detail : 选择服务器信令                                     //
 //                                                              //
 //////////////////////////////////////////////////////////////////
@@ -18,14 +18,14 @@
 #include "commonpacket.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// 
+// 选择服务器错误编号定义
 enum SELECT_ERROR
 {
-	SELECT_ERROR_NONE_LOGIN = 2,   // 选择登陆服务器时出错, > DATA_DEF::DATAD_FAIL
+	SELECT_ERROR_NONE_LOGIN = 2,   // 选择登陆服务器时出错
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-// select信令定义
+// 选择服务器信令定义
 enum PAK_EVENT_SELECT
 {
 	PAK_EVENT_SELECT_LOGIN = (PAK_EVENT_SELECT_BEGIN + 1), // 选择空闲登陆服务器, CPAKSimple<PAK_EVENT_SELECT_LOGIN, PAK_TYPE>
@@ -33,7 +33,7 @@ enum PAK_EVENT_SELECT
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CPAKSelectLoginAck : 选择空闲登陆服务器Ack
+/// 选择空闲登陆服务器Ack
 class CPAKSelectLoginAck : public CPAKAck
 {
 public:
@@ -49,7 +49,7 @@ public:
 	CNETTraits::NET_ADDR&  GetAddr(void);
 	void                   SetAddr(CNETTraits::NET_ADDR& LoginAddr);
 private:
-	CNETTraits::NET_ADDR   m_LoginAddr;  // outer addr[ipv4 or ipv6]
+	CNETTraits::NET_ADDR   m_LoginAddr;  ///< 登陆服务器地址[ipv4 or ipv6]
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////

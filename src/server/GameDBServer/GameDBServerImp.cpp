@@ -5,8 +5,8 @@
 //   Source File : GameDBServerImp.cpp                          //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
-//   Detail : 游戏DB服务器管理实现                               //
+//   Update : 2015-11-25     version 0.0.0.5                    //
+//   Detail : 游戏DB服务器实现                                   //
 //                                                              //
 //////////////////////////////////////////////////////////////////
 
@@ -48,11 +48,11 @@ UInt CGameDBServer::Init(CEventHandler& EventHandlerRef)
 	}
 	return (UInt)RET_FAIL;
 }
-// 获取共享的配置对象和网络对象
+
 bool CGameDBServer::InitLoadShare(void)
 {
 	assert(m_pConfig == nullptr);
-	m_pUIHandler->OnHandle(CServerConfig::CFG_DEFAULT_CONFIG, reinterpret_cast<uintptr_t>(&m_pConfig), DATA_INDEX_GAMEDB);
+	m_pUIHandler->OnHandle(CServerConfig::CFG_CONFIG_PTR, reinterpret_cast<uintptr_t>(&m_pConfig), DATA_INDEX_GAMEDB);
 	if (m_pConfig == nullptr) {
 		LOG_ERROR(m_FileLog, TF("[游戏DB服务器]从界面回调接口获取配置对象指针无效"));
 		return false;
@@ -74,7 +74,7 @@ bool CGameDBServer::InitLoadShare(void)
 	m_pConfig->GetKeyValue()->AddItem(CServerConfig::GameDBServer, this);
 	return true;
 }
-// 初始化配置
+
 bool CGameDBServer::InitLoadConfig(void)
 {
 	assert(m_krListenGame == nullptr);
@@ -110,13 +110,13 @@ void CGameDBServer::Exit(void)
 		LOG_INFO(m_FileLog, TF("[游戏DB服务器]游戏DB服务退出处理完成!"));
 	}
 }
-// 清除共享的配置对象和网络对象
+
 void CGameDBServer::ExitUnloadShare(void)
 {
 	m_pConfig    = nullptr;
 	m_NetworkPtr = nullptr;
 }
-//
+
 void CGameDBServer::ExitUnloadConfig(void)
 {
 	assert(m_krListenGame == nullptr);
@@ -149,7 +149,7 @@ bool CGameDBServer::Start(void)
 	}
 	return true;
 }
-// 运行创建监听游戏服务器连接的连接对象
+
 bool CGameDBServer::StartListenGameServer(void)
 {
 	UShort     usPort = 0;
@@ -161,22 +161,22 @@ bool CGameDBServer::StartListenGameServer(void)
 	m_krListenGame = m_NetworkPtr->Create(*this, usPort, *strAddr);
 	if (m_krListenGame != nullptr) {
 		bRet = m_NetworkPtr->Listen(m_krListenGame);
-		LOGV_INFO(m_FileLog, TF("[游戏DB服务器]创建监听游戏服务器的连接[%s]:%d成功, %s"), *strAddr, usPort, bRet ? TF("监听连接成功") : TF("监听连接失败"));
+		LOGV_INFO(m_FileLog, TF("[游戏DB服务器]创建监听游戏服务器对象[%s]:%d成功, %s"), *strAddr, usPort, bRet ? TF("监听操作成功") : TF("监听操作失败"));
 	}
 	else {
-		LOGV_ERROR(m_FileLog, TF("[游戏DB服务器]创建监听游戏服务器的连接[%s]:%d失败"), *strAddr, usPort);
+		LOGV_ERROR(m_FileLog, TF("[游戏DB服务器]创建监听游戏服务器对象[%s]:%d失败"), *strAddr, usPort);
 		bRet = false;
 	}
 	return bRet;
 }
-// 运行创建监听网关服务器连接的连接对象
+
 bool CGameDBServer::StartListenGateServer(void)
 {
 	UShort     usPort = 0;
 	CStringKey strAddr;
 	m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_GAMEDB, CServerConfig::CFG_DEFAULT_GATE, strAddr, usPort);
 	if (usPort == 0) {
-		m_krListenGate = (KeyRef)this; // 与gamr相同监听地址
+		m_krListenGate = (KeyRef)this;
 		LOG_INFO(m_FileLog, TF("[游戏DB服务器]监听网关服务器地址和监听游戏服务器地址一样"));
 		return true;
 	}
@@ -186,10 +186,10 @@ bool CGameDBServer::StartListenGateServer(void)
 	m_krListenGate = m_NetworkPtr->Create(*this, usPort, *strAddr);
 	if (m_krListenGate != nullptr) {
 		bRet = m_NetworkPtr->Listen(m_krListenGate);
-		LOGV_INFO(m_FileLog, TF("[游戏DB服务器]创建监听网关服务器的连接[%s]:%d成功, %s"), *strAddr, usPort, bRet ? TF("监听连接成功") : TF("监听连接失败"));
+		LOGV_INFO(m_FileLog, TF("[游戏DB服务器]创建监听网关服务器对象[%s]:%d成功, %s"), *strAddr, usPort, bRet ? TF("监听操作成功") : TF("监听操作失败"));
 	}
 	else {
-		LOGV_ERROR(m_FileLog, TF("[游戏DB服务器]创建监听网关服务器的连接[%s]:%d失败"), *strAddr, usPort);
+		LOGV_ERROR(m_FileLog, TF("[游戏DB服务器]创建监听网关服务器对象[%s]:%d失败"), *strAddr, usPort);
 		bRet = false;
 	}
 	return bRet;
@@ -232,17 +232,17 @@ void CGameDBServer::Stop(void)
 		LOG_INFO(m_FileLog, TF("[游戏DB服务器]游戏DB服务停止完成!"));
 	}
 }
-// 停止监听游戏服务器连接
+
 void CGameDBServer::StopListenGameServer(void)
 {
 	if (m_krListenGame != nullptr) {
 		m_NetworkPtr->Destroy(m_krListenGame, false);
 		m_krListenGame = nullptr;
-		LOG_INFO(m_FileLog, TF("[游戏DB服务器]销毁监听游戏服务器的连接成功"));
+		LOG_INFO(m_FileLog, TF("[游戏DB服务器]销毁监听游戏服务器对象成功"));
 	}
 	m_pShareGameSvr = nullptr;
 }
-// 停止监听网关服务器连接
+
 void CGameDBServer::StopListenGateServer(void)
 {
 	if (m_krListenGate != nullptr) {
@@ -250,7 +250,7 @@ void CGameDBServer::StopListenGateServer(void)
 			m_NetworkPtr->Destroy(m_krListenGate, false);
 		}
 		m_krListenGate = nullptr;
-		LOG_INFO(m_FileLog, TF("[游戏DB服务器]销毁监听网关服务器的连接成功"));
+		LOG_INFO(m_FileLog, TF("[游戏DB服务器]销毁监听网关服务器对象成功"));
 	}
 	m_pShareGateSvr = nullptr;
 }
@@ -269,7 +269,7 @@ bool CGameDBServer::OnShareRoutine(Int nEvent, CEventBase& EventRef, LLong llPar
 			return OnShareUpdate(EventRef, llParam);
 		}
 		break;
-	//case PAK_EVENT_UNLINK: // 同进程服务器断连, 说明服务停止, 不需要处理
+	//case PAK_EVENT_UNLINK: // 同进程服务器注销, 说明服务停止, 不需要处理
 	//	break;
 	case PAK_EVENT_GATE_SELECT:
 	case PAK_EVENT_GATE_PLAY:
@@ -288,7 +288,7 @@ bool CGameDBServer::OnShareRoutine(Int nEvent, CEventBase& EventRef, LLong llPar
 	}
 	return true;
 }
-// 同进程服务器处理
+
 bool CGameDBServer::OnShareLink(CEventBase& EventRef, LLong llParam)
 {
 	CPAKLink* pLink = static_cast<CPAKLink*>(&EventRef);
@@ -296,7 +296,7 @@ bool CGameDBServer::OnShareLink(CEventBase& EventRef, LLong llParam)
 		if (m_pShareGameSvr == nullptr) {
 			// 0.获得共享指针
 			m_pShareGameSvr = reinterpret_cast<ICommonServer*>(llParam);
-			LOGV_INFO(m_FileLog, TF("[游戏DB服务器]同进程游戏服务器[%p]连接"), m_pShareGameSvr);
+			LOGV_INFO(m_FileLog, TF("[游戏DB服务器]同进程游戏服务器[%p]注册"), m_pShareGameSvr);
 			return ServerLink<SVR_GAME_MAP, DATA_INDEX_GAME, INFOI_GAME>(pLink, (DataRef)llParam, m_GameSvrMap);
 		}
 		else {
@@ -307,7 +307,7 @@ bool CGameDBServer::OnShareLink(CEventBase& EventRef, LLong llParam)
 		if (m_pShareGateSvr == nullptr) {
 			// 0.获得共享指针
 			m_pShareGateSvr = reinterpret_cast<ICommonServer*>(llParam);
-			LOGV_INFO(m_FileLog, TF("[游戏DB服务器]同进程网关服务器[%p]连接"), m_pShareGateSvr);
+			LOGV_INFO(m_FileLog, TF("[游戏DB服务器]同进程网关服务器[%p]注册"), m_pShareGateSvr);
 			return ServerLink<SVR_GATE_MAP, DATA_INDEX_GATE, INFOI_GATE>(pLink, (DataRef)llParam, m_GateSvrMap);
 		}
 		else {
@@ -327,7 +327,7 @@ bool CGameDBServer::OnShareUpdate(CEventBase& EventRef, LLong llParam)
 			return ServerUpdate<SVR_GAME_MAP, DATA_INDEX_GAME, INFOI_GAME>(pUpdate, (DataRef)llParam, m_GameSvrMap);
 		}
 		else {
-			LOGV_WARN(m_FileLog, TF("[游戏DB服务器]同进程游戏服务器对象不存在"));
+			LOGV_WARN(m_FileLog, TF("[游戏DB服务器]同进程游戏服务器对象未注册"));
 		}
 	}
 	else if (pUpdate->GetType() == PAK_TYPE_GATE) {
@@ -337,7 +337,7 @@ bool CGameDBServer::OnShareUpdate(CEventBase& EventRef, LLong llParam)
 			return ServerUpdate<SVR_GATE_MAP, DATA_INDEX_GATE, INFOI_GATE>(pUpdate, (DataRef)llParam, m_GateSvrMap);
 		}
 		else {
-			LOGV_WARN(m_FileLog, TF("[游戏DB服务器]同进程网关服务器对象不存在"));
+			LOGV_WARN(m_FileLog, TF("[游戏DB服务器]同进程网关服务器对象未注册"));
 		}
 	}
 	return false;
@@ -378,7 +378,7 @@ bool CGameDBServer::OnTcpDispatch(const PacketPtr& PktPtr, PTCP_PARAM pTcp)
 			break;
 		default:
 			{
-				LOGV_WARN(m_FileLog, TF("[游戏DB服务器]%p连接信息无法识别的%X服务器信令包数据[event=%d]"), pTcp->krSocket, PktPtr->GetType(), PktPtr->GetEvent());
+				LOGV_WARN(m_FileLog, TF("[游戏DB服务器]%p无法识别的%X服务器信令包数据[event=%d]"), pTcp->krSocket, PktPtr->GetType(), PktPtr->GetEvent());
 			}
 		}
 	}
@@ -389,32 +389,32 @@ bool CGameDBServer::OnTcpDispatch(const PacketPtr& PktPtr, PTCP_PARAM pTcp)
 	}
 	return bRet;
 }
-// 服务器处理
+
 bool CGameDBServer::OnServerLink(CPAKLink* pLink, KeyRef krSocket)
 {
 	bool bRet = false;
 	switch (pLink->GetType()) {
 	case PAK_TYPE_GAME:
 		{
-			LOGV_INFO(m_FileLog, TF("[游戏DB服务器]游戏服务器[%p]连接"), krSocket);
+			LOGV_INFO(m_FileLog, TF("[游戏DB服务器]游戏服务器[%p]注册"), krSocket);
 			bRet = ServerLink<SVR_GAME_MAP, DATA_INDEX_GAME, INFOI_GAME>(pLink, (DataRef)krSocket, m_GameSvrMap);
 		}
 		break;
 	case PAK_TYPE_GATE:
 		{
-			LOGV_INFO(m_FileLog, TF("[游戏DB服务器]网关服务器[%p]连接"), krSocket);
+			LOGV_INFO(m_FileLog, TF("[游戏DB服务器]网关服务器[%p]注册"), krSocket);
 			bRet = ServerLink<SVR_GATE_MAP, DATA_INDEX_GATE, INFOI_GATE>(pLink, (DataRef)krSocket, m_GateSvrMap);
 		}
 		break;
 	default:
 		{
-			LOGV_WARN(m_FileLog, TF("[游戏DB服务器]%p连接信息无法识别的%X服务器信令包数据"), krSocket, pLink->GetType());
+			LOGV_WARN(m_FileLog, TF("[游戏DB服务器]%p无法识别的%X服务器信令包数据"), krSocket, pLink->GetType());
 		}
 	}
 	if (bRet) {
-		// 3.设置连接为选择服务器属性
+		// 3.设置为对应服务器类型
 		m_NetworkPtr->SetAttr(krSocket, pLink->GetType());
-		// 4.发送连接回执包
+		// 4.发送注册回执包
 		CPAKSimple<PAK_EVENT_LINKACK, PAK_TYPE_GAMEDB> LinkAck;
 		LinkAck.AdjustSize();
 		m_NetworkPtr->Send(krSocket, LinkAck);
@@ -440,7 +440,7 @@ bool CGameDBServer::OnServerUpdate(CPAKUpdate* pUpdate, KeyRef krSocket)
 		break;
 	default:
 		{
-			LOGV_WARN(m_FileLog, TF("[游戏DB服务器]%p更新信息无法识别的%X服务器信令包数据"), krSocket, pUpdate->GetType());
+			LOGV_WARN(m_FileLog, TF("[游戏DB服务器]%p无法识别的%X服务器信令包数据"), krSocket, pUpdate->GetType());
 		}
 	}
 	if (bRet) {
@@ -458,25 +458,25 @@ bool CGameDBServer::OnServerUnlink(CPAKHead* pUnlink, KeyRef krSocket)
 	switch (pUnlink->GetType()) {
 	case PAK_TYPE_GAME:
 		{
-			LOGV_INFO(m_FileLog, TF("[游戏DB服务器]游戏服务器[%p]断接"), krSocket);
+			LOGV_INFO(m_FileLog, TF("[游戏DB服务器]游戏服务器[%p]注销"), krSocket);
 			bRet = ServerUnlink<SVR_GAME_MAP, DATA_INDEX_GAME, INFOI_GAME>(krSocket, m_GameSvrMap);
 		}
 		break;
 	case PAK_TYPE_GATE:
 		{
-			LOGV_INFO(m_FileLog, TF("[游戏DB服务器]网关服务器[%p]断接"), krSocket);
+			LOGV_INFO(m_FileLog, TF("[游戏DB服务器]网关服务器[%p]注销"), krSocket);
 			bRet = ServerUnlink<SVR_GATE_MAP, DATA_INDEX_GATE, INFOI_GATE>(krSocket, m_GateSvrMap);
 		}
 		break;
 	default:
 		{
-			LOGV_WARN(m_FileLog, TF("[游戏DB服务器]%p断连信息无法识别的%X服务器信令包数据"), krSocket, pUnlink->GetType());
+			LOGV_WARN(m_FileLog, TF("[游戏DB服务器]%p无法识别的%X服务器信令包数据"), krSocket, pUnlink->GetType());
 		}
 	}
 	if (bRet) {
-		// 3.设置连接为无效服务器属性
+		// 3.设置为无效服务器类型
 		m_NetworkPtr->SetAttr(krSocket, PAK_TYPE_NONE);
-		// 4.发送断连回执包
+		// 4.发送注销回执包
 		CPAKSimple<PAK_EVENT_UNLINKACK, PAK_TYPE_GAMEDB> UnlinkAck;
 		UnlinkAck.AdjustSize();
 		m_NetworkPtr->Send(krSocket, UnlinkAck);
@@ -484,19 +484,14 @@ bool CGameDBServer::OnServerUnlink(CPAKHead* pUnlink, KeyRef krSocket)
 	return bRet;
 }
 //--------------------------------------
-bool CGameDBServer::OnTcpAccept(KeyRef krAccept, KeyRef krListen)
+bool CGameDBServer::OnTcpAccept(KeyRef krAccept, KeyRef)
 {
 	if (m_nStatus == STATUSC_RUN) {
 		UShort     usPort = 0;
 		CStringKey strAddr;
 		m_NetworkPtr->GetAddr(krAccept, strAddr, usPort);
 
-		if (krListen == m_krListenGame) {
-			DEV_INFO(TF("[游戏DB服务器]游戏服务器[%s]:%d连接完成!"), *strAddr, usPort);
-		}
-		else if (krListen == m_krListenGate) {
-			DEV_INFO(TF("[游戏DB服务器]网关服务器[%s]:%d连接完成!"), *strAddr, usPort);
-		}
+		DEV_INFO(TF("[游戏DB服务器]服务器[%s]:%d连接完成!"), *strAddr, usPort);
 		m_ServerInfo[INFOI_GAMEDB].Incr();
 		return true;
 	}
@@ -510,22 +505,26 @@ bool CGameDBServer::OnTcpClose(KeyRef krSocket, LLong llLiveData)
 {
 	if (krSocket == m_krListenGame) {
 		m_krListenGame = nullptr;
-		DEV_INFO(TF("[游戏DB服务器]监听游戏服务器连接关闭"));
+		DEV_INFO(TF("[游戏DB服务器]监听游戏服务器关闭"));
+		LOG_INFO(m_FileLog, TF("[游戏DB服务器]监听游戏服务器关闭"));
 	}
 	else if (krSocket == m_krListenGate) {
 		m_krListenGate = nullptr;
-		DEV_INFO(TF("[游戏DB服务器]监听网关服务器连接关闭"));
+		DEV_INFO(TF("[游戏DB服务器]监听网关服务器关闭"));
+		LOG_INFO(m_FileLog, TF("[游戏DB服务器]监听网关服务器关闭"));
 	}
-	else { // 单个服务器断连/断开
+	else { // 单个服务器断开
 		switch (llLiveData) {
 		case PAK_TYPE_GAME:
 			{
 				ServerUnlink<SVR_GAME_MAP, DATA_INDEX_GAME, INFOI_GAME>(krSocket, m_GameSvrMap);
+				LOGV_INFO(m_FileLog, TF("游戏DB服务器]游戏服务器[%p]断开"), krSocket);
 			}
 			break;
 		case PAK_TYPE_GATE:
 			{
 				ServerUnlink<SVR_GATE_MAP, DATA_INDEX_GATE, INFOI_GATE>(krSocket, m_GateSvrMap);
+				LOGV_INFO(m_FileLog, TF("游戏DB服务器]网关服务器[%p]断开"), krSocket);
 			}
 			break;
 		default:
@@ -537,7 +536,6 @@ bool CGameDBServer::OnTcpClose(KeyRef krSocket, LLong llLiveData)
 	return true;
 }
 //--------------------------------------
-// 定时检测监听游戏服务器连接的连接对象是否有效
 bool CGameDBServer::CheckListenGameServer(void)
 {
 	if (m_krListenGame == nullptr) {
@@ -545,7 +543,7 @@ bool CGameDBServer::CheckListenGameServer(void)
 	}
 	return true;
 }
-// 定时检测监听网关服务器连接的连接对象是否有效
+
 bool CGameDBServer::CheckListenGateServer(void)
 {
 	if (m_krListenGate == nullptr) {
@@ -553,7 +551,7 @@ bool CGameDBServer::CheckListenGateServer(void)
 	}
 	return true;
 }
-// 同步服务器信息给界面
+
 bool CGameDBServer::SyncServerInfo(void)
 {
 	if (m_ServerInfo[INFOI_GAMEDB].usStatus == STATUSU_SYNC) {

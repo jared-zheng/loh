@@ -5,8 +5,8 @@
 //   Header File : GateDlg.h                                    //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
-//   Detail : 网关服务器管理界面对话框                            //
+//   Update : 2015-11-25     version 0.0.0.5                    //
+//   Detail : 网关服务器界面对话框                               //
 //                                                              //
 //////////////////////////////////////////////////////////////////
 
@@ -18,7 +18,7 @@
 #include "CommonDlg.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CGateDlg
+/// 网关服务器界面对话框
 class CGateDlg : public CCommonDlg
 {
 public:
@@ -48,9 +48,10 @@ private:
 
 	virtual CXListView* GetListView(Int nServerIndex) OVERRIDE;
 private:
-	UInt                   m_uGateOnline;  // 网关服务器连接客户端当前在线数量
-	UInt                   m_uGateAll;     // 网关服务器连接客户端总数量
-	UInt                   m_uGateBusy;    // 网关服务器繁忙程度
+	UInt                   m_uGateOnline;
+	UInt                   m_uGateAll;   
+	UInt                   m_uGateBusy;  
+	UInt                   m_uGameId;
 	UInt                   m_uQueueUsers;
 	UInt                   m_uSelectUsers;
 	UInt                   m_uPlayUsers;

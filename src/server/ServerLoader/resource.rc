@@ -157,6 +157,7 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
 LTEXT           "Connect Game:", IDC_CONNECT_GAME, 0, 0, 180, 12
+LTEXT           "Zone Config:", IDC_ZONE_CONFIG, 184, 0, 180, 12
 LTEXT           "Servers Info", IDC_ZONE_INFO, 0, 16, 380, 12
 CONTROL         "", IDD_ZONE, "SysListView32", LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 0, 32, 100, 100
 END
@@ -220,6 +221,12 @@ END
 
 STRINGTABLE 
 BEGIN
+    IDS_ZONE_SCENE			"场景数量"
+    IDS_ZONE_THREAD			"线程数量"
+END
+
+STRINGTABLE 
+BEGIN
     IDC_STATUSBAR			"启动时间%d-%02d-%02d %02d:%02d:%02d"
 END
 
@@ -237,6 +244,7 @@ BEGIN
 	IDC_TCP_SERVICE			"TCP服务:"
 	IDC_UDP_SERVICE			"UDP服务:"
 	IDC_PING_SERVICE		"PING服务:"
+	IDC_ZONE_CONFIG		    "地图配置:"
 END
 
 STRINGTABLE 
@@ -247,8 +255,8 @@ BEGIN
 	IDC_LOGIN_INFO          "[登陆:在线=%u,总数=%u,负载=%d%%][游戏:服务器数=%u,在线=%u,总数=%u]"
 	IDC_GAMEDB_INFO         "[游戏DB:在线=%u,总数=%u,负载=%d%%][游戏:服务器数=%u,在线=%u,总数=%u][网关:服务器数=%u,在线=%u,总数=%u]"
 	IDC_GAME_INFO           "[游戏:在线=%u,总数=%u,负载=%d%%][地图:服务器数=%u,在线=%u,总数=%u][网关:服务器数=%u,在线=%u,总数=%u]"
-	IDC_ZONE_INFO           "[地图:在线=%u,总数=%u,负载=%d%%]维护区域:"
-	IDC_GATE_INFO           "[网关:在线=%u,总数=%u,负载=%d%%]队列人数:%d, 选择角色:%d, 游戏进行:%d"
+	IDC_ZONE_INFO           "[地图:在线=%u,总数=%u,场景数=%u, 线程数=%u]维护区域:"
+	IDC_GATE_INFO           "[网关:在线=%u,总数=%u,负载=%d%%]连接的游戏服务器Id:%d, 队列人数:%d, 选择角色:%d, 游戏进行:%d"
 END
 
 STRINGTABLE 
@@ -266,8 +274,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2013,10,25,1
- PRODUCTVERSION 1,0,0,2
+FILEVERSION 2015,11,25,1
+ PRODUCTVERSION 0,0,0,5
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -284,12 +292,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "LH Studio"
             VALUE "FileDescription", "ServerLoader.exe"
-            VALUE "FileVersion", "2013,10,25,01"
+            VALUE "FileVersion", "2015,11,25,01"
             VALUE "InternalName", "ServerLoader.exe"
             VALUE "LegalCopyright", "Copyright(C) LH Studio. All Rights Reserved"
             VALUE "OriginalFilename", "ServerLoader.exe"
             VALUE "ProductName", "ServerLoader.exe"
-            VALUE "ProductVersion", "1, 0, 0, 2"
+            VALUE "ProductVersion", "0, 0, 0, 5"
         END
     END
     BLOCK "VarFileInfo"

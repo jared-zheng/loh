@@ -5,7 +5,7 @@
 //   Private Header File : CommonServer.hxx                     //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
+//   Update : 2015-11-25     version 0.0.0.5                    //
 //   Detail : 服务器标准接口                                     //
 //                                                              //
 //////////////////////////////////////////////////////////////////
@@ -18,14 +18,14 @@
 #include "CommonServer.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CCommonServerSystem : CSubSystem
+/// 服务器标准接口SubSystem : 通过UUID查找和创建接口实现对象
 class CCommonServerSystem : public CSubSystem
 {
 public:
-	// CComponent
+	/// CComponent
 	virtual UInt  Command(PCXStr pszCMD, uintptr_t utParam) OVERRIDE;
 	virtual UInt  Update(void) OVERRIDE;
-	// CSubSystem
+	/// CSubSystem
 	virtual UInt  Init(void) OVERRIDE;
 	virtual void  Exit(void) OVERRIDE;
 

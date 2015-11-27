@@ -5,7 +5,7 @@
 //   Inline File : gatepacket.inl                               //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
+//   Update : 2015-11-25     version 0.0.0.5                    //
 //   Detail : 网关服务器信令                                     //
 //                                                              //
 //////////////////////////////////////////////////////////////////
@@ -76,6 +76,7 @@ INLINE void CPAKGateQueueAck::SetParam(Int nParam)
 INLINE CPAKGateSelect::CPAKGateSelect(UInt uEvent, UInt uType)
 : CPAKSession(uEvent, uType)
 , m_llUserId(0)
+, m_nGameId(0)
 {
 }
 
@@ -86,6 +87,7 @@ INLINE CPAKGateSelect::~CPAKGateSelect(void)
 INLINE CPAKGateSelect::CPAKGateSelect(const CPAKGateSelect& aSrc)
 : CPAKSession(aSrc)
 , m_llUserId(aSrc.m_llUserId)
+, m_nGameId(aSrc.m_nGameId)
 {
 }
 
@@ -95,13 +97,14 @@ INLINE CPAKGateSelect& CPAKGateSelect::operator=(const CPAKGateSelect& aSrc)
 	{
 		CPAKSession::operator=(aSrc);
 		m_llUserId = aSrc.m_llUserId;
+		m_nGameId  = aSrc.m_nGameId;
 	}
 	return (*this);
 }
 
 INLINE size_t CPAKGateSelect::Length(void)
 {
-	return (sizeof(LLong) + CPAKSession::Length());
+	return (sizeof(LLong) + sizeof(Int) + CPAKSession::Length());
 }
 
 INLINE void CPAKGateSelect::Serialize(CStream& Stream)
@@ -109,11 +112,11 @@ INLINE void CPAKGateSelect::Serialize(CStream& Stream)
 	CPAKSession::Serialize(Stream);
 	if (Stream.IsRead())
 	{
-		Stream >> m_llUserId;
+		Stream >> m_llUserId >> m_nGameId;
 	}
 	else
 	{
-		Stream << m_llUserId;
+		Stream << m_llUserId << m_nGameId;
 	}
 }
 
@@ -125,6 +128,16 @@ INLINE LLong CPAKGateSelect::GetUserId(void)
 INLINE void CPAKGateSelect::SetUserId(LLong llUserId)
 {
 	m_llUserId = llUserId;
+}
+
+INLINE Int CPAKGateSelect::GetGameId(void)
+{
+	return m_nGameId;
+}
+
+INLINE void CPAKGateSelect::SetGameId(Int nGameId)
+{
+	m_nGameId = nGameId;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -206,7 +219,6 @@ INLINE void CPAKGateSelectAck::SetStream(CStream& Stream)
 // CPAKGatePlay : 申请进入游戏世界信息
 INLINE CPAKGatePlay::CPAKGatePlay(UInt uEvent, UInt uType)
 : CPAKSession(uEvent, uType)
-, m_llUserId(0)
 , m_nRoleId(0)
 {
 }
@@ -217,7 +229,6 @@ INLINE CPAKGatePlay::~CPAKGatePlay(void)
 
 INLINE CPAKGatePlay::CPAKGatePlay(const CPAKGatePlay& aSrc)
 : CPAKSession(aSrc)
-, m_llUserId(aSrc.m_llUserId)
 , m_nRoleId(aSrc.m_nRoleId)
 {
 }
@@ -227,7 +238,6 @@ INLINE CPAKGatePlay& CPAKGatePlay::operator=(const CPAKGatePlay& aSrc)
 	if (&aSrc != this)
 	{
 		CPAKSession::operator=(aSrc);
-		m_llUserId = aSrc.m_llUserId;
 		m_nRoleId  = aSrc.m_nRoleId;
 	}
 	return (*this);
@@ -243,22 +253,12 @@ INLINE void CPAKGatePlay::Serialize(CStream& Stream)
 	CPAKSession::Serialize(Stream);
 	if (Stream.IsRead())
 	{
-		Stream >> m_llUserId >> m_nRoleId;
+		Stream >> m_nRoleId;
 	}
 	else
 	{
-		Stream << m_llUserId << m_nRoleId;
+		Stream  << m_nRoleId;
 	}
-}
-
-INLINE LLong CPAKGatePlay::GetUserId(void)
-{
-	return m_llUserId;
-}
-
-INLINE void CPAKGatePlay::SetUserId(LLong llUserId)
-{
-	m_llUserId = llUserId;
 }
 
 INLINE Int CPAKGatePlay::GetRoleId(void)

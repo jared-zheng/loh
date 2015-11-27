@@ -5,7 +5,7 @@
 //   Header File : MainFrame.h                                  //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
+//   Update : 2015-11-25     version 0.0.0.5                    //
 //   Detail : 服务加载器主界面                                   //
 //                                                              //
 //////////////////////////////////////////////////////////////////
@@ -19,7 +19,7 @@
 #include "ServerLoader.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CMainFrame
+/// 服务加载器主界面
 class CMainFrame : public CXFrameWnd, public CEventHandler
 {
 public:

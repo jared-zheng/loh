@@ -5,8 +5,8 @@
 //   Header File : GameServerImp.h                              //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
-//   Detail : 游戏服务器管理实现                                 //
+//   Update : 2015-11-25     version 0.0.0.5                    //
+//   Detail : 游戏服务器实现                                     //
 //                                                              //
 //////////////////////////////////////////////////////////////////
 
@@ -26,14 +26,15 @@
 #include "CommonServer.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CGameServer : 游戏服务器
-// 主要任务 :
-// 1. 维护网关服务器对游戏操作的请求的转发
-// 2. 维护地图服务器对游戏操作回应的转发
-// 3. 事务简单, 全部使用网络线程和定时线程来处理
+/// 游戏服务器实现
+/// - 主要任务 :
+/// -# 维护网关服务器对游戏操作的请求的转发
+/// -# 维护地图服务器对游戏操作回应的转发
+/// -# 事务简单, 全部使用网络线程和定时线程来处理
 class CGameServer : public ICommonServer, public CPAKHandler
 {
 public:
+	/// 各类型服务器组统计信息索引号
 	enum INFO_INDEX {
 		INFOI_ZONE,
 		INFOI_GATE,
@@ -67,126 +68,130 @@ public:
 private:
 	CGameServer(const CGameServer&);
 	CGameServer& operator=(const CGameServer&);
-	// 获取共享的配置对象和网络对象
+	/// 获取共享的配置对象和网络对象
 	bool  InitLoadShare(void);
-	// 初始化配置
+	/// 初始化配置
 	bool  InitLoadConfig(void);
 
-	// 清除共享的配置对象和网络对象
+	/// 清除共享的配置对象和网络对象
 	void  ExitUnloadShare(void);
-	// 
+	/// 清除配置
 	void  ExitUnloadConfig(void);
 
-	// 运行创建连接中心服务器的连接对象
+	/// 创建连接中心服务器对象
 	bool  StartConnectCenterServer(void);
-	// 运行创建连接游戏DB服务器的连接对象
+	/// 创建连接游戏DB服务器对象
 	bool  StartConnectGameDBServer(void);
-	// 运行创建监听地图服务器连接的连接对象
+	/// 创建监听地图服务器对象
 	bool  StartListenZoneServer(void);
-	// 运行创建监听网关服务器连接的连接对象
+	/// 创建监听网关服务器对象
 	bool  StartListenGateServer(void);
-	// 运行创建UDP监听登陆服务器校验连接对象
+	/// 创建UDP监听登陆服务器对象
 	bool  StartUDPService(void);
 
-	// 停止连接中心服务器
+	/// 停止连接中心服务器
 	void  StopConnectCenterServer(void);
-	// 停止连接游戏DB服务器
+	/// 停止连接游戏DB服务器
 	void  StopConnectGameDBServer(void);
-	// 停止监听地图服务器连接
+	/// 停止监听地图服务器
 	void  StopListenZoneServer(void);
-	// 停止监听网关服务器连接
+	/// 停止监听网关服务器
 	void  StopListenGateServer(void);
-	// 停止UDP监听登陆服务器
+	/// 停止UDP监听登陆服务器
 	void  StopUDPService(void);
 
-	// 处理中心服务器的信令包
+	/// 处理中心服务器的信令包
 	bool  DispatchCenterServer(const PacketPtr& PktPtr, KeyRef krSocket);
-	// 处理游戏DB服务器的信令包
+	/// 处理游戏DB服务器的信令包
 	bool  DispatchGameDBServer(const PacketPtr& PktPtr, KeyRef krSocket);
-	// 处理地图服务器的信令包
+	/// 处理地图服务器的信令包
 	bool  DispatchZoneServer(const PacketPtr& PktPtr, KeyRef krSocket);
-	// 处理网关服务器的信令包
+	/// 处理网关服务器的信令包
 	bool  DispatchGateServer(const PacketPtr& PktPtr, KeyRef krSocket);
 
-	// 连接中心服务器
+	/// 向中心服务器注册
 	void  LinkCenterServer(void);
-	// 断连中心服务器
+	/// 向中心服务器注销
 	void  UnlinkCenterServer(void);
-	// 连接游戏DB服务器
+	/// 向游戏DB服务器注册
 	void  LinkGameDBServer(void);
-	// 断连游戏DB服务器
+	/// 向游戏DB服务器注销
 	void  UnlinkGameDBServer(void);
 
-	// 定时检测连接中心服务器的连接对象是否有效
+	/// 定时检测连接中心服务器对象是否有效
 	bool  CheckConnectCenterServer(void);
-	// 定时检测连接游戏DB服务器的连接对象是否有效
+	/// 定时检测连接游戏DB服务器对象是否有效
 	bool  CheckConnectGameDBServer(void);
-	// 定时检测监听地图服务器连接的连接对象是否有效
+	/// 定时检测监听地图服务器对象是否有效
 	bool  CheckListenZoneServer(void);
-	// 定时检测监听网关服务器连接的连接对象是否有效
+	/// 定时检测监听网关服务器对象是否有效
 	bool  CheckListenGateServer(void);
-	// 定时检测UDP监听登陆服务器的连接对象是否有效
+	/// 定时检测UDP监听登陆服务器对象是否有效
 	bool  CheckUDPService(void);
 
-	// 同步服务器信息给界面
+	/// 同步服务器信息给界面
 	bool  SyncServersInfo(void);
-	// 同步游戏服务器信息给界面
+	/// 同步游戏服务器信息给界面
 	bool  SyncGameServerInfo(void);
-	// 同步地图服务器信息给界面
+	/// 同步地图服务器信息给界面
 	bool  SyncZoneServerInfo(void);
-	// 同步网关服务器负载情况数组并同步给界面
+	/// 同步网关服务器负载情况并同步给界面
 	bool  SyncGateSortInfo(void);
 
-	// 同进程服务器处理
+	/// 同进程服务器处理-注册
 	bool  OnShareLink(CEventBase& EventRef, LLong llParam);
+	/// 同进程服务器处理-更新
 	bool  OnShareUpdate(CEventBase& EventRef, LLong llParam);
-	// 服务器处理
+	/// 网络服务器处理-注册
 	bool  OnServerLink(CPAKLink* pLink, KeyRef krSocket);
+	/// 网络服务器处理-更新
 	bool  OnServerUpdate(CPAKUpdate* pUpdate, KeyRef krSocket);
+	/// 网络服务器处理-注销
 	bool  OnServerUnlink(CPAKHead* pUnlink, KeyRef krSocket);
-
+	/// 注册服务器数据
 	template <typename MAP_TYPE, DATA_INDEX DataIndex, INFO_INDEX InfoIndex>
 	bool  ServerLink(CPAKLink* pLink, DataRef drServer, MAP_TYPE& MapRef);
-
+	/// 更新服务器数据
 	template <typename MAP_TYPE, DATA_INDEX DataIndex, INFO_INDEX InfoIndex>
 	bool  ServerUpdate(CPAKUpdate* pUpdate, DataRef drServer, MAP_TYPE& MapRef);
-
+	/// 注销服务器数据
 	template <typename MAP_TYPE, DATA_INDEX DataIndex, INFO_INDEX InfoIndex>
 	bool  ServerUnlink(KeyRef krSocket, MAP_TYPE& MapRef);
-	//
+	/// 选择合适的网关服务器来处理连接游戏请求
 	bool  SelectGame(CPAKLoginSelectGame* pSelect, LLong llParam = 0);
-	//
+	/// 注册的地图服务器对象和地图编号加入对应表
 	bool  AddZoneServerIds(CStream& Stream, PINDEX index, DataRef drServer);
+	/// 注销的地图服务器对象和地图编号从对应表删除
 	bool  RemoveZoneServerIds(PINDEX index);
 private:
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// ZONE_ID
 	typedef tagDATA_MAP<UInt, DataRef>   ZONE_ID_MAP, *PZONE_ID_MAP;
 private:
-	Int                 m_nStatus;          // 服务器状态
-	bool                m_bCenterCnnted;
-	bool                m_bCenterLinked;
-	bool                m_bGameDBCnnted;
-	bool                m_bGameDBLinked;
-	CEventHandler*      m_pUIHandler;       // 界面回调接口
-	CServerConfig*      m_pConfig;          // 配置对象
-	KeyRef              m_krConnectCenter;  // 内网, 连接中心服务器
-	KeyRef              m_krConnectGameDB;  // 内网, 连接游戏DB服务器
-	KeyRef              m_krListenZone;     // 内网, 监听地图服务器
-	KeyRef              m_krListenGate;     // 内网, 监听网关服务器
-	KeyRef              m_krUDPService;     // 内网, 监听登陆服务器
-	ICommonServer*      m_pShareCenterSvr;
-	ICommonServer*      m_pShareGameDBSvr;
-	ICommonServer*      m_pShareZoneSvr;
-	ICommonServer*      m_pShareGateSvr;
-	CFileLog            m_FileLog;          // 简单文本日志
-	CNetworkPtr         m_NetworkPtr;       // 网络对象
-	GAME_ADDR           m_ServerInfo;       // 本服务器信息
-	SERVER_INFO         m_OthersInfo[INFOI_MAX]; // zone, gate, login
-	SVR_ZONE_INDEX_MAP  m_ZoneSvrMap;
-	ZONE_ID_MAP         m_ZoneIdMap;
-	SVR_GATE_MAP        m_GateSvrMap;
-	RESULT_CHAIN        m_SortChain;       //   
+	Int                 m_nStatus;          ///< 服务器状态
+	bool                m_bCenterCnnted;	///< 是否连接中心服务器完成
+	bool                m_bCenterLinked;	///< 是否向中心服务器注册完成
+	bool                m_bGameDBCnnted;	///< 是否连接游戏DB服务器完成
+	bool                m_bGameDBLinked;	///< 是否向游戏DB服务器注册完成
+	CEventHandler*      m_pUIHandler;       ///< 界面回调接口
+	CServerConfig*      m_pConfig;          ///< 配置对象
+	KeyRef              m_krConnectCenter;  ///< 内网, 连接中心服务器
+	KeyRef              m_krConnectGameDB;  ///< 内网, 连接游戏DB服务器
+	KeyRef              m_krListenZone;     ///< 内网, 监听地图服务器
+	KeyRef              m_krListenGate;     ///< 内网, 监听网关服务器
+	KeyRef              m_krUDPService;     ///< 内网, 监听登陆服务器
+	ICommonServer*      m_pShareCenterSvr;  ///< 同进程中心服务器
+	ICommonServer*      m_pShareGameDBSvr;  ///< 同进程游戏DB服务器
+	ICommonServer*      m_pShareZoneSvr;    ///< 同进程地图服务器
+	ICommonServer*      m_pShareGateSvr;    ///< 同进程网关服务器
+	CFileLog            m_FileLog;          ///< 简单文本日志
+	CNetworkPtr         m_NetworkPtr;       ///< 网络对象
+	GAME_ADDR           m_ServerInfo;       ///< 本服务器信息
+	SERVER_INFO         m_OthersInfo[INFOI_MAX]; ///< 服务器组统计数据
+	SVR_ZONE_INDEX_MAP  m_ZoneSvrMap;       ///< 地图服务器信息
+	ZONE_ID_MAP         m_ZoneIdMap;        ///< 地图服务器对象和地图编号对应表
+	SVR_GATE_MAP        m_GateSvrMap;       ///< 网关服务器信息
+	RESULT_CHAIN        m_SortChain;        ///< 网关服务器排序结果 
 };
 
 INLINE CGameServer::CGameServer(void)
@@ -265,7 +270,7 @@ INLINE bool CGameServer::ServerLink(CPAKLink* pLink, DataRef drServer, MAP_TYPE&
 		CSyncLockWaitScope scope(MapRef.GetLock());
 		assert(MapRef.Find(drServer) == nullptr);
 		index = MapRef.Add(drServer, Pair.Value);
-		if ((DataIndex == PAK_TYPE_ZONE) && (index != nullptr)) {
+		if ((DataIndex == DATA_INDEX_ZONE) && (index != nullptr)) {
 			AddZoneServerIds(pLink->GetStream(), index, drServer);// 后面接的是地图服务器管理的地图区域数组
 		}
 	}
@@ -307,7 +312,7 @@ INLINE bool CGameServer::ServerUnlink(KeyRef krSocket, MAP_TYPE& MapRef)
 	// 2.更新界面
 	m_pUIHandler->OnHandle(PAK_EVENT_UNLINK, reinterpret_cast<uintptr_t>(krSocket), DataIndex);
 
-	SERVER_DATA sd = { 0 };
+	SERVER_DATA sd;
 	{
 		CSyncLockWaitScope scope(MapRef.GetLock());
 		MAP_TYPE::SVR_MAP_PAIR* pPair = MapRef.Find((DataRef)krSocket);

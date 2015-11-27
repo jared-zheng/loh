@@ -5,8 +5,8 @@
 //   Header File : LoginDBServerImp.h                           //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
-//   Detail : 登陆DB服务器管理实现                               //
+//   Update : 2015-11-25     version 0.0.0.5                    //
+//   Detail : 登陆DB服务器实现                                   //
 //                                                              //
 //////////////////////////////////////////////////////////////////
 
@@ -23,11 +23,11 @@
 #include "CommonRoutine.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CLoginDBServer : 登陆DB服务器
-// 主要任务 :
-// 1. 账号相关的数据库操作
-// 2. 将热门账号启动的时候缓存到内存
-// 3. 事务和数据库相关, 需要专门的事务处理队列来进行
+/// 登陆DB服务器实现
+/// - 主要任务 :
+/// -# 账号相关的数据库操作
+/// -# 将热门账号启动的时候缓存到内存
+/// -# 事务和数据库相关, 需要专门的事务处理队列来进行
 class CLoginDBServer : public ICommonServer, public CPAKHandler
 {
 public:
@@ -64,50 +64,55 @@ public:
 private:
 	CLoginDBServer(const CLoginDBServer&);
 	CLoginDBServer& operator=(const CLoginDBServer&);
-	// 获取共享的配置对象和网络对象
+	/// 获取共享的配置对象和网络对象
 	bool  InitLoadShare(void);
-	// 初始化配置
+	/// 初始化配置
 	bool  InitLoadConfig(void);
 
-	// 清除共享的配置对象和网络对象
+	/// 清除共享的配置对象和网络对象
 	void  ExitUnloadShare(void);
-	// 
+	/// 清除配置 
 	void  ExitUnloadConfig(void);
 
-	// 运行创建监听登陆服务器连接的连接对象
+	/// 创建监听登陆服务器对象
 	bool  StartListenLoginServer(void);
 
-	// 停止监听登陆服务器连接
+	/// 停止监听登陆服务器
 	void  StopListenLoginServer(void);
 
-	// 定时检测监听登陆服务器连接的连接对象是否有效
+	/// 定时检测监听登陆服务器对象是否有效
 	bool  CheckListenLoginServer(void);
 
-	// 同步服务器信息给界面
+	/// 同步服务器信息给界面
 	bool  SyncServerInfo(void);
 
-	// 同进程服务器处理
+	/// 同进程服务器处理-注册
 	bool  OnShareLink(CEventBase& EventRef, LLong llParam);
+	/// 同进程服务器处理-更新
 	bool  OnShareUpdate(CEventBase& EventRef, LLong llParam);
-	// 服务器处理
+	/// 网络服务器处理-注册
 	bool  OnServerLink(CPAKLink* pLink, KeyRef krSocket);
+	/// 网络服务器处理-更新
 	bool  OnServerUpdate(CPAKUpdate* pUpdate, KeyRef krSocket);
+	/// 网络服务器处理-注销
 	bool  OnServerUnlink(CPAKHead* pUnlink, KeyRef krSocket);
-
+	/// 注册服务器数据
 	bool  ServerLink(CPAKLink* pLink, DataRef drServer);
+	/// 更新服务器数据
 	bool  ServerUpdate(CPAKUpdate* pUpdate, DataRef drServer);
+	/// 注销服务器数据
 	bool  ServerUnlink(KeyRef krSocket);
 private:
-	Int                    m_nStatus;         // 服务器状态
-	CEventHandler*         m_pUIHandler;      // 界面回调接口
-	CServerConfig*         m_pConfig;         // 配置对象
-	KeyRef                 m_krListenLogin;   // 内网, 监听登陆服务器
-	ICommonServer*         m_pShareLoginSvr;
-	CFileLog               m_FileLog;         // 简单文本日志
-	CNetworkPtr            m_NetworkPtr;      // 网络对象
-	CCommonRoutinePtr      m_LoginDBRoutine;  // 
-	SERVER_INFO            m_ServerInfo;      // 本服务器信息
-	SVR_LOGIN_MAP          m_LoginSvrMap;     // 登陆服务器信息   
+	Int                    m_nStatus;         ///< 服务器状态
+	CEventHandler*         m_pUIHandler;      ///< 界面回调接口
+	CServerConfig*         m_pConfig;         ///< 配置对象
+	KeyRef                 m_krListenLogin;   ///< 内网, 监听登陆服务器
+	ICommonServer*         m_pShareLoginSvr;  ///< 同进程登陆服务器
+	CFileLog               m_FileLog;         ///< 简单文本日志
+	CNetworkPtr            m_NetworkPtr;      ///< 网络对象
+	CCommonRoutinePtr      m_LoginDBRoutine;  ///< 登陆DB事务处理
+	SERVER_INFO            m_ServerInfo;      ///< 本服务器信息
+	SVR_LOGIN_MAP          m_LoginSvrMap;     ///< 登陆服务器信息   
 };
 
 INLINE CLoginDBServer::CLoginDBServer(void)

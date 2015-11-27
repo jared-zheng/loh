@@ -38,6 +38,9 @@
 #define IDS_SHARE_GAME       221
 #define IDS_SHARE_LISTEN     222
 
+#define IDS_ZONE_SCENE       300
+#define IDS_ZONE_THREAD      301
+
 #define IDC_TOOLBAR          1000
 #define IDC_STATUSBAR        1001
 #define IDC_SERVERTAB        1002
@@ -54,6 +57,7 @@
 #define IDC_TCP_SERVICE      1019
 #define IDC_UDP_SERVICE      1020
 #define IDC_PING_SERVICE     1021
+#define IDC_ZONE_CONFIG      1022
 
 #define IDC_CENTER_INFO      1030
 #define IDC_SELECT_INFO      1031

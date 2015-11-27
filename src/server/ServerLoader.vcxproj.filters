@@ -58,6 +58,9 @@
     <ClCompile Include="ServerLoader\GateDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ServerLoader\ZoneDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ServerLoader\stdafx.h">
@@ -109,6 +112,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ServerLoader\GateDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ServerLoader\ZoneDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

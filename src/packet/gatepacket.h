@@ -5,7 +5,7 @@
 //   Header File : gatepacket.h                                 //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
+//   Update : 2015-11-25     version 0.0.0.5                    //
 //   Detail : 网关服务器信令                                     //
 //                                                              //
 //////////////////////////////////////////////////////////////////
@@ -21,7 +21,7 @@
 // 
 enum GATE_ERROR
 {
-	GATE_ERROR_SESSION = (DATAD_FAIL + 1),  // session错误或者状态错误
+	GATE_ERROR_SESSION = (DATAD_FAIL + 1),  // 会话错误或者状态错误
 	GATE_ERROR_AUTHCODE1,                   // 验证码1校验失败
 	GATE_ERROR_AUTHCODE2,                   // 验证码2校验失败
 	GATE_ERROR_USERID,                      // 用户id错误
@@ -30,7 +30,7 @@ enum GATE_ERROR
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-// gate信令定义
+// 网关服务器信令定义
 enum PAK_EVENT_GATE
 {
 	PAK_EVENT_GATE_QUEUE = (PAK_EVENT_GATE_BEGIN + 1), // 申请排队信息, CPAKSession
@@ -41,7 +41,7 @@ enum PAK_EVENT_GATE
 
 	PAK_EVENT_GATE_PLAY,                               // 申请选择的角色进入游戏, CPAKGatePlay
 	PAK_EVENT_GATE_PLAYACK,                            // 申请选择的角色进入游戏Ack, CPAKSessionAck or CPAKAck(error)
-	// TODO!!!角色操作是客户端需要表明是否是排队中还是游戏中的
+
 	PAK_EVENT_GATE_CREATE,                             // 申请创建角色
 	PAK_EVENT_GATE_CREATEACK,                          // 申请创建角色Ack or CPAKAck(error)
 
@@ -53,7 +53,7 @@ enum PAK_EVENT_GATE
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CPAKGateQueueAck : 申请排队信息Ack
+/// 申请排队信息Ack
 class CPAKGateQueueAck : public CPAKSessionAck
 {
 public:
@@ -69,11 +69,13 @@ public:
 	Int    GetParam(void);
 	void   SetParam(Int nParam);
 private:
-	Int    m_nParam; // ack=0, m_nParam=0表示可以进入游戏了
+	///< 查询成功并且返回的m_nParam值为0, 表示直接可以进入游戏; 大于0表示排队中
+	///< 查询错误ACK=GATE_ERROR_GAME, 表示当前已经在游戏状态, 不需要排队, m_nParam值为具体的游戏状态
+	Int    m_nParam; 
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CPAKGateSelect : 申请选择角色信息
+/// 申请选择角色信息
 class CPAKGateSelect : public CPAKSession
 {
 public:
@@ -88,12 +90,16 @@ public:
 
 	LLong          GetUserId(void);
 	void           SetUserId(LLong llUserId);
+
+	Int            GetGameId(void);
+	void           SetGameId(Int nGameId);
 private:
-	LLong          m_llUserId;
+	LLong          m_llUserId; ///< 用户Id
+	Int            m_nGameId;  ///< 游戏服务器Id, 游戏DB服务器可以管理多个游戏的数据, 查询时需要提供哪个游戏服务器(区)的数据
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CPAKGateSelectAck : 申请选择角色信息Ack
+/// 申请选择角色信息Ack
 class CPAKGateSelectAck : public CPAKSessionAck 
 {
 public:
@@ -113,12 +119,12 @@ public:
 	CStream&   GetStream(void);
 	void       SetStream(CStream& Stream);
 private:
-	UInt       m_uRoleCount; // 角色个数
-	CStream*   m_pStream;    // 角色信息
+	UInt       m_uRoleCount; ///< 角色个数
+	CStream*   m_pStream;    ///< 角色信息数据流
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CPAKGatePlay : 申请进入游戏世界信息
+/// 申请进入游戏世界信息
 class CPAKGatePlay : public CPAKSession
 {
 public:
@@ -131,14 +137,10 @@ public:
 	virtual size_t Length(void) OVERRIDE;
 	virtual void   Serialize(CStream&) OVERRIDE;
 
-	LLong          GetUserId(void);
-	void           SetUserId(LLong llUserId);
-
 	Int            GetRoleId(void);
 	void           SetRoleId(Int nRoleId);
 private:
-	LLong          m_llUserId;
-	Int            m_nRoleId;
+	Int            m_nRoleId; ///< 角色Id
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////

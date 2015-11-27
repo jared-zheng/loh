@@ -5,8 +5,8 @@
 //   Header File : GameDBServerImp.h                            //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
-//   Detail : 游戏DB服务器管理实现                               //
+//   Update : 2015-11-25     version 0.0.0.5                    //
+//   Detail : 游戏DB服务器实现                                   //
 //                                                              //
 //////////////////////////////////////////////////////////////////
 
@@ -24,11 +24,11 @@
 #include "CommonRoutine.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CGameDBServer : 游戏DB服务器
-// 主要任务 :
-// 1. 角色相关的数据库操作
-// 2. 将热门账号的角色启动的时候缓存到内存
-// 3. 事务和数据库相关, 需要专门的事务处理队列来进行
+/// 游戏DB服务器实现
+/// - 主要任务 :
+/// -# 角色相关的数据库操作
+/// -# 将热门账号的角色启动的时候缓存到内存
+/// -# 事务和数据库相关, 需要专门的事务处理队列来进行
 class CGameDBServer : public ICommonServer, public CPAKHandler
 {
 public:
@@ -74,65 +74,68 @@ public:
 private:
 	CGameDBServer(const CGameDBServer&);
 	CGameDBServer& operator=(const CGameDBServer&);
-	// 获取共享的配置对象和网络对象
+	/// 获取共享的配置对象和网络对象
 	bool  InitLoadShare(void);
-	// 初始化配置
+	/// 初始化配置
 	bool  InitLoadConfig(void);
 
-	// 清除共享的配置对象和网络对象
+	/// 清除共享的配置对象和网络对象
 	void  ExitUnloadShare(void);
-	// 
+	/// 清除配置
 	void  ExitUnloadConfig(void);
 
-	// 运行创建监听游戏服务器连接的连接对象
+	/// 创建监听游戏服务器对象
 	bool  StartListenGameServer(void);
-	// 运行创建监听网关服务器连接的连接对象
+	/// 创建监听网关服务器对象
 	bool  StartListenGateServer(void);
 
-	// 停止监听游戏服务器连接
+	/// 停止监听游戏服务器
 	void  StopListenGameServer(void);
-	// 停止监听网关服务器连接
+	/// 停止监听网关服务器
 	void  StopListenGateServer(void);
 
-	// 定时检测监听游戏服务器连接的连接对象是否有效
+	/// 定时检测监听游戏服务器对象是否有效
 	bool  CheckListenGameServer(void);
-	// 定时检测监听网关服务器连接的连接对象是否有效
+	/// 定时检测监听网关服务器对象是否有效
 	bool  CheckListenGateServer(void);
 
-	// 同步服务器信息给界面
+	/// 同步服务器信息给界面
 	bool  SyncServerInfo(void);
 
-	// 同进程服务器处理
+	/// 同进程服务器处理-注册
 	bool  OnShareLink(CEventBase& EventRef, LLong llParam);
+	/// 同进程服务器处理-更新
 	bool  OnShareUpdate(CEventBase& EventRef, LLong llParam);
-	// 服务器处理
+	/// 网络服务器处理-注册
 	bool  OnServerLink(CPAKLink* pLink, KeyRef krSocket);
+	/// 网络服务器处理-更新
 	bool  OnServerUpdate(CPAKUpdate* pUpdate, KeyRef krSocket);
+	/// 网络服务器处理-注销
 	bool  OnServerUnlink(CPAKHead* pUnlink, KeyRef krSocket);
-
+	/// 注册服务器数据
 	template <typename MAP_TYPE, DATA_INDEX DataIndex, INFO_INDEX InfoIndex>
 	bool  ServerLink(CPAKLink* pLink, DataRef drServer, MAP_TYPE& MapRef);
-
+	/// 更新服务器数据
 	template <typename MAP_TYPE, DATA_INDEX DataIndex, INFO_INDEX InfoIndex>
 	bool  ServerUpdate(CPAKUpdate* pUpdate, DataRef drServer, MAP_TYPE& MapRef);
-
+	/// 注销服务器数据
 	template <typename MAP_TYPE, DATA_INDEX DataIndex, INFO_INDEX InfoIndex>
 	bool  ServerUnlink(KeyRef krSocket, MAP_TYPE& MapRef);
 
 private:
-	Int                    m_nStatus;         // 服务器状态
-	CEventHandler*         m_pUIHandler;      // 界面回调接口
-	CServerConfig*         m_pConfig;         // 配置对象
-	KeyRef                 m_krListenGame;    // 内网, 监听游戏服务器
-	KeyRef                 m_krListenGate;    // 内网, 监听网关服务器
-	ICommonServer*         m_pShareGameSvr;
-	ICommonServer*         m_pShareGateSvr;
-	CFileLog               m_FileLog;         // 简单文本日志
-	CNetworkPtr            m_NetworkPtr;      // 网络对象
-	CCommonRoutinePtr      m_GameDBRoutine;   // 
-	SERVER_INFO            m_ServerInfo[INFOI_MAX]; // gamedb, game, gate
-	SVR_GAME_MAP           m_GameSvrMap;      // 游戏服务器信息
-	SVR_GATE_MAP           m_GateSvrMap;      // 网关服务器信息  
+	Int                    m_nStatus;         ///< 服务器状态
+	CEventHandler*         m_pUIHandler;      ///< 界面回调接口
+	CServerConfig*         m_pConfig;         ///< 配置对象
+	KeyRef                 m_krListenGame;    ///< 内网, 监听游戏服务器
+	KeyRef                 m_krListenGate;    ///< 内网, 监听网关服务器
+	ICommonServer*         m_pShareGameSvr;   ///< 同进程游戏服务器
+	ICommonServer*         m_pShareGateSvr;   ///< 同进程网关服务器
+	CFileLog               m_FileLog;         ///< 简单文本日志
+	CNetworkPtr            m_NetworkPtr;      ///< 网络对象
+	CCommonRoutinePtr      m_GameDBRoutine;   ///< 游戏DB事务处理 
+	SERVER_INFO            m_ServerInfo[INFOI_MAX]; ///< 服务器组统计数据
+	SVR_GAME_MAP           m_GameSvrMap;      ///< 游戏服务器信息
+	SVR_GATE_MAP           m_GateSvrMap;      ///< 网关服务器信息  
 };
 
 INLINE CGameDBServer::CGameDBServer(void)
@@ -281,7 +284,7 @@ INLINE bool CGameDBServer::ServerUnlink(KeyRef krSocket, MAP_TYPE& MapRef)
 	// 2.更新界面
 	m_pUIHandler->OnHandle(PAK_EVENT_UNLINK, reinterpret_cast<uintptr_t>(krSocket), DataIndex);
 
-	SERVER_DATA sd = { 0 };
+	SERVER_DATA sd;
 	{
 		CSyncLockWaitScope scope(MapRef.GetLock());
 		MAP_TYPE::SVR_MAP_PAIR* pPair = MapRef.Find((DataRef)krSocket);

@@ -5,8 +5,8 @@
 //   Header File : CenterServerImp.h                            //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
-//   Detail : 中心服务器管理实现                                 //
+//   Update : 2015-11-25     version 0.0.0.5                    //
+//   Detail : 中心服务器实现                                     //
 //                                                              //
 //////////////////////////////////////////////////////////////////
 
@@ -21,14 +21,16 @@
 #include "CommonServer.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CCenterServer : 中心服务器
-// 主要任务 :
-// 1. 维护在线选择, 登陆和游戏服务器信息, 
-// 2. 定时同步登陆服务器信息给选择服务器, 定时同步游戏服务器信息给登陆服务器, 定时同步登陆服务器信息给游戏服务器
-// 3. 事务简单, 全部使用网络线程和定时线程来处理
+/// 中心服务器实现
+/// - 主要任务 :
+///   -# 维护在线选择, 登陆和游戏服务器信息
+///   -# 定时同步登陆服务器信息给选择服务器, 定时同步游戏服务器信息给登陆服务器
+///   -# 事务简单, 全部使用网络线程和定时线程来处理
+///   -# 从服务器扩展配置文件中读取数据库信息, 定时写入统计数据
 class CCenterServer : public ICommonServer, public CPAKHandler
 {
 public:
+	/// 各类型服务器组统计信息索引号
 	enum INFO_INDEX
 	{
 		INFOI_CENTER,
@@ -65,76 +67,84 @@ public:
 private:
 	CCenterServer(const CCenterServer&);
 	CCenterServer& operator=(const CCenterServer&);
-	// 获取共享的配置对象和网络对象
+	/// 获取共享的配置对象和网络对象
 	bool  InitLoadShare(void);
-	// 初始化配置
+	/// 初始化配置
 	bool  InitLoadConfig(void);
 
-	// 清除共享的配置对象和网络对象
+	/// 清除共享的配置对象和网络对象
 	void  ExitUnloadShare(void);
-	// 
+	/// 清除配置
 	void  ExitUnloadConfig(void);
 
-	// 运行创建监听选择, 登陆和游戏服务器连接的连接对象
+	/// 创建监听选择, 登陆和游戏服务器对象
 	bool  StartListenServers(void);
-	// 运行创建监听服务器的连接
+	/// 创建监听服务器对象
 	bool  StartListenServer(KeyRef& krListen, const CStringKey& strAddr, UShort usPort);
 
-	// 停止监听服务器连接
+	/// 停止监听服务器
 	void  StopListenServers(void);
 
-	// 定时检测监听服务器连接的连接对象是否有效
+	/// 定时检测监听服务器对象是否有效
 	bool  CheckListenServers(void);
-	// 定时检测监听选择服务器连接的连接对象是否有效
+	/// 定时检测监听选择服务器对象是否有效
 	bool  CheckListenSelectServer(void);
-	// 定时检测监听登陆服务器连接的连接对象是否有效
+	/// 定时检测监听登陆服务器对象是否有效
 	bool  CheckListenLoginServer(void);
-	// 定时检测监听游戏服务器连接的连接对象是否有效
+	/// 定时检测监听游戏服务器对象是否有效
 	bool  CheckListenGameServer(void);
 
-	// 同步服务器信息
+	/// 同步服务器信息
 	bool  SyncServersInfo(void);
+	/// 同步中心服务器信息给界面
 	bool  SyncCenterServerInfo(void);
+	/// 同步选择服务器信息给界面
 	bool  SyncSelectServerInfo(void);
+	/// 同步登陆服务器信息给所有选择服务器和界面
 	bool  SyncLoginServerInfo(void);
+	/// 同步游戏服务器信息给所有登陆服务器和界面
 	bool  SyncGameServerInfo(void);
+	/// 同步登陆服务器特殊信息给单个选择服务器
 	bool  SendLoginServerInfo(KeyRef krSocket = nullptr);
+	/// 同步游戏服务器特殊信息给单个登陆服务器
 	bool  SendGameServerInfo(KeyRef krSocket = nullptr);
 
-	// 同进程服务器处理
+	/// 同进程服务器处理-注册
 	bool  OnShareLink(CEventBase& EventRef, LLong llParam);
+	/// 同进程服务器处理-更新
 	bool  OnShareUpdate(CEventBase& EventRef, LLong llParam);
-	// 服务器处理
+	/// 网络服务器处理-注册
 	bool  OnServerLink(CPAKLink* pLink, KeyRef krSocket);
+	/// 网络服务器处理-更新
 	bool  OnServerUpdate(CPAKUpdate* pUpdate, KeyRef krSocket);
+	/// 网络服务器处理-注销
 	bool  OnServerUnlink(CPAKHead* pUnlink, KeyRef krSocket);
-
+	/// 注册服务器数据
 	template <typename MAP_TYPE, DATA_INDEX DataIndex, INFO_INDEX InfoIndex>
 	bool  ServerLink(CPAKLink* pLink, DataRef drServer, MAP_TYPE& MapRef);
-
+	/// 更新服务器数据
 	template <typename MAP_TYPE, DATA_INDEX DataIndex, INFO_INDEX InfoIndex>
 	bool  ServerUpdate(CPAKUpdate* pUpdate, DataRef drServer, MAP_TYPE& MapRef);
-
+	/// 注销服务器数据
 	template <typename MAP_TYPE, DATA_INDEX DataIndex, INFO_INDEX InfoIndex>
 	bool  ServerUnlink(KeyRef krSocket, MAP_TYPE& MapRef);
 
 private:
-	Int                    m_nStatus;        // 服务器状态
-	CEventHandler*         m_pUIHandler;     // 界面回调接口
-	CServerConfig*         m_pConfig;        // 配置对象
-	KeyRef                 m_krListenSelect; // 内网, 监听选择服务器
-	KeyRef                 m_krListenLogin;  // 内网, 监听登陆服务器
-	KeyRef                 m_krListenGame;   // 外网, 监听游戏服务器
-	ICommonServer*         m_pShareSelectSvr;
-	ICommonServer*         m_pShareLoginSvr;
-	ICommonServer*         m_pShareGameSvr;
-	CFileLog               m_FileLog;        // 简单文本日志
-	CNetworkPtr            m_NetworkPtr;     // 网络对象
-	SERVER_INFO            m_ServerInfo[INFOI_MAX];  // center, select, login, game
-	SVR_SELECT_MAP         m_SelectSvrMap;   // 选择服务器信息
-	SVR_LOGIN_MAP          m_LoginSvrMap;    // 登陆服务器信息
-	SVR_GAME_MAP           m_GameSvrMap;     // 游戏服务器信息
-	// 1. 从服务器扩展配置文件中读取数据库信息, 定时写入统计数据
+	Int                    m_nStatus;         ///< 服务器状态
+	CEventHandler*         m_pUIHandler;      ///< 界面回调接口
+	CServerConfig*         m_pConfig;         ///< 配置对象
+	KeyRef                 m_krListenSelect;  ///< 内网, 监听选择服务器
+	KeyRef                 m_krListenLogin;   ///< 内网, 监听登陆服务器
+	KeyRef                 m_krListenGame;    ///< 外网, 监听游戏服务器
+	ICommonServer*         m_pShareSelectSvr; ///< 同进程选择服务器
+	ICommonServer*         m_pShareLoginSvr;  ///< 同进程登陆服务器
+	ICommonServer*         m_pShareGameSvr;   ///< 同进程游戏服务器
+	CFileLog               m_FileLog;         ///< 简单文本日志
+	CNetworkPtr            m_NetworkPtr;      ///< 网络对象
+	SERVER_INFO            m_ServerInfo[INFOI_MAX];  ///< 服务器组统计数据
+	SVR_SELECT_MAP         m_SelectSvrMap;   ///< 选择服务器信息
+	SVR_LOGIN_MAP          m_LoginSvrMap;    ///< 登陆服务器信息
+	SVR_GAME_MAP           m_GameSvrMap;     ///< 游戏服务器信息
 };
 
 INLINE CCenterServer::CCenterServer(void)
@@ -220,7 +230,7 @@ INLINE bool CCenterServer::ServerLink(CPAKLink* pLink, DataRef drServer, MAP_TYP
 		if (pPair == nullptr) {
 			index = MapRef.Add(drServer, Pair.Value);
 		}
-		else if (pPair->m_V.usStatus == STATUSU_UNLINK) { // 断连的信息未同步到其他服务器
+		else if (pPair->m_V.usStatus == STATUSU_UNLINK) { // 注销的信息未同步到其他服务器
 			pPair->m_V = Pair.Value;
 			index = reinterpret_cast<PINDEX>(pPair);
 		}
@@ -263,7 +273,7 @@ INLINE bool CCenterServer::ServerUnlink(KeyRef krSocket, MAP_TYPE& MapRef)
 	// 2.更新界面
 	m_pUIHandler->OnHandle(PAK_EVENT_UNLINK, reinterpret_cast<uintptr_t>(krSocket), DataIndex);
 
-	SERVER_DATA sd = { 0 };
+	SERVER_DATA sd;
 	{
 		CSyncLockWaitScope scope(MapRef.GetLock());
 		MAP_TYPE::SVR_MAP_PAIR* pPair = MapRef.Find((DataRef)krSocket);
@@ -271,10 +281,10 @@ INLINE bool CCenterServer::ServerUnlink(KeyRef krSocket, MAP_TYPE& MapRef)
 			sd = pPair->m_V;
 			// 3.修改状态
 			if ((DataIndex == DATA_INDEX_SELECT) || (pPair->m_V.usStatus <= STATUSU_LINK)) {
-				MapRef.RemoveAt(reinterpret_cast<PINDEX>(pPair));// 登陆服务器从登陆到断连/断开, 信息还未同步到其他服务器, 直接作为无效信息删除
+				MapRef.RemoveAt(reinterpret_cast<PINDEX>(pPair));// 登陆服务器从注册到注销, 信息还未同步到其他服务器, 直接作为无状态信息删除
 			}
 			else if ((pPair->m_V.usStatus == STATUSU_OKAY) || (pPair->m_V.usStatus == STATUSU_SYNC)) {
-				pPair->m_V.usStatus = STATUSU_UNLINK; // 需要同步给选择服务器以后再删除
+				pPair->m_V.usStatus = STATUSU_UNLINK; // 需要同步给其他服务器以后再删除
 			}
 		}
 	}

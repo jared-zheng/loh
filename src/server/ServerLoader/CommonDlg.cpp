@@ -5,8 +5,8 @@
 //   Source File : CommonDlg.cpp                                //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
-//   Detail : 服务器管理界面TAB子对话框基类                       //
+//   Update : 2015-11-25     version 0.0.0.5                    //
+//   Detail : 服务器界面TAB子对话框基类                          //
 //                                                              //
 //////////////////////////////////////////////////////////////////
 
@@ -58,7 +58,7 @@ bool CCommonDlg::OnHandle(Int nEvent, uintptr_t utParam, LLong llParam)
 			SetServer(reinterpret_cast<ICommonServer*>(utParam));
 		}
 		break;
-	case CServerConfig::CFG_DEFAULT_CONFIG:
+	case CServerConfig::CFG_CONFIG_PTR:
 		{
 			*(reinterpret_cast<CServerConfig**>(utParam)) = &(GServerLoaderInst->m_Config);
 		}
@@ -109,7 +109,12 @@ void CCommonDlg::InitListViewItem(Int nServerIndex)
 		strTemp.Load(IDS_ONLINE_COUNT);
 		pListView->AddColumn(*strTemp, 2, 80, -1, LVCF_WIDTH | LVCF_TEXT);
 
-		strTemp.Load(IDS_BUSY_PER);
+		if (nServerIndex != DATA_INDEX_ZONE) {
+			strTemp.Load(IDS_BUSY_PER);
+		}
+		else {
+			strTemp.Load(IDS_ZONE_SCENE);
+		}
 		pListView->AddColumn(*strTemp, 3, 80, -1, LVCF_WIDTH | LVCF_TEXT);
 		switch (nServerIndex) {
 		case DATA_INDEX_SELECT:
@@ -133,7 +138,7 @@ void CCommonDlg::InitListViewItem(Int nServerIndex)
 		case DATA_INDEX_GAME:
 			{
 				strTemp.Load(IDS_LISTEN_PING);
-				pListView->AddColumn(*strTemp, 4, 120, -1, LVCF_WIDTH | LVCF_TEXT);
+				pListView->AddColumn(*strTemp, 4, 80, -1, LVCF_WIDTH | LVCF_TEXT);
 
 				strTemp.Load(IDS_LISTEN_ZONE);
 				pListView->AddColumn(*strTemp, 5, 120, -1, LVCF_WIDTH | LVCF_TEXT);
@@ -150,6 +155,8 @@ void CCommonDlg::InitListViewItem(Int nServerIndex)
 			break;
 		case DATA_INDEX_ZONE:
 			{
+				strTemp.Load(IDS_ZONE_THREAD);
+				pListView->AddColumn(*strTemp, 4, 80, -1, LVCF_WIDTH | LVCF_TEXT);
 			}
 			break;
 		case DATA_INDEX_GATE:
@@ -195,11 +202,18 @@ bool CCommonDlg::AddListViewData(Int nServerIndex, uintptr_t utParam)
 			strTemp.ToString((ULong)pPair->Value.uOnline);
 			pListView->SetItemText(nIndex, 2, *strTemp);
 
-			strTemp.ToString((ULong)(pPair->Value.usBusy / DATAD_PERCENT));
-			pListView->SetItemText(nIndex, 3, *strTemp);
+			if (nServerIndex != DATA_INDEX_ZONE) {
+				strTemp.ToString((ULong)(pPair->Value.usBusy / DATAD_PERCENT));
+				pListView->SetItemText(nIndex, 3, *strTemp);
 
-			if (pPair->Value.AddrLen() > 0) {
 				AddListViewAddr(nServerIndex, nIndex, pPair->Value.NetAddr);
+			}
+			else {
+				strTemp.ToString((ULong)(pPair->Value.usBusy));
+				pListView->SetItemText(nIndex, 3, *strTemp);
+
+				strTemp.ToString((ULong)(pPair->Value.usIncr));
+				pListView->SetItemText(nIndex, 4, *strTemp);
 			}
 
 			pListView->SetItemData(nIndex, (uintptr_t)pPair->drKey);
@@ -229,8 +243,17 @@ bool CCommonDlg::UpdateListViewData(Int nServerIndex, uintptr_t utParam)
 			strTemp.ToString((ULong)pPair->Value.uOnline);
 			pListView->SetItemText(nIndex, 2, *strTemp);
 
-			strTemp.ToString((ULong)(pPair->Value.usBusy / DATAD_PERCENT));
-			pListView->SetItemText(nIndex, 3, *strTemp);
+			if (nServerIndex != DATA_INDEX_ZONE) {
+				strTemp.ToString((ULong)(pPair->Value.usBusy / DATAD_PERCENT));
+				pListView->SetItemText(nIndex, 3, *strTemp);
+			}
+			else {
+				strTemp.ToString((ULong)(pPair->Value.usBusy));
+				pListView->SetItemText(nIndex, 3, *strTemp);
+
+				strTemp.ToString((ULong)(pPair->Value.usIncr));
+				pListView->SetItemText(nIndex, 4, *strTemp);
+			}
 			return true;
 		}
 		DEV_WARN(TF("Dlg界面更新%d索引服务器信息失败!"), nServerIndex);

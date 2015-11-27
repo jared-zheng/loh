@@ -5,7 +5,7 @@
 //   Header File : centerpacket.h                               //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
+//   Update : 2015-11-25     version 0.0.0.5                    //
 //   Detail : 中心服务器信令                                     //
 //                                                              //
 //////////////////////////////////////////////////////////////////
@@ -18,7 +18,7 @@
 #include "commonpacket.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//// center信令定义
+//// 中心服务器信令定义
 //enum PAK_EVENT_CENTER
 //{
 //	// = (PAK_EVENT_CENTER_BEGIN + 1),

@@ -5,8 +5,8 @@
 //   Header File : GateServerImp.h                              //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
-//   Detail : 网关服务器管理实现                                 //
+//   Update : 2015-11-25     version 0.0.0.5                    //
+//   Detail : 网关服务器实现                                     //
 //                                                              //
 //////////////////////////////////////////////////////////////////
 
@@ -26,10 +26,11 @@
 #include "CommonRoutine.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CGateServer : 网关服务器
-// 主要任务 :
-// 1. 维护与客户端的连接
-// 2. 需要专门的事务处理队列来进行, 高并发!!!
+/// 网关服务器实现
+/// - 主要任务 :
+/// -# 维护与客户端的连接
+/// -# 需要专门的事务处理队列来进行, 高并发!!!
+/// -# 可以让网关连接聊天服务器
 class CGateServer : public ICommonServer, public CPAKHandler
 {
 public:
@@ -58,6 +59,7 @@ public:
 	virtual bool   OnTcpClose(KeyRef krSocket, LLong llLiveData) OVERRIDE;
 	virtual bool   OnUdpClose(KeyRef krSocket, LLong llLiveData) OVERRIDE;
 	// ...
+	Int            GetGameId(void);
 	CEventHandler* GetUIHandler(void);
 	CServerConfig* GetConfig(void);
 	ICommonServer* GetShareGameDBServer(void);
@@ -71,81 +73,83 @@ public:
 private:
 	CGateServer(const CGateServer&);
 	CGateServer& operator=(const CGateServer&);
-	// 获取共享的配置对象和网络对象
+	/// 获取共享的配置对象和网络对象
 	bool  InitLoadShare(void);
-	// 初始化配置
+	/// 初始化配置
 	bool  InitLoadConfig(void);
 
-	// 清除共享的配置对象和网络对象
+	/// 清除共享的配置对象和网络对象
 	void  ExitUnloadShare(void);
-	// 
+	/// 清除配置
 	void  ExitUnloadConfig(void);
 
-	// 运行创建连接游戏DB服务器的连接对象
+	/// 创建连接游戏DB服务器对象
 	bool  StartConnectGameDBServer(void);
-	// 运行创建连接游戏服务器的连接对象
+	/// 创建连接游戏服务器对象
 	bool  StartConnectGameServer(void);
-	// 运行创建UDP监听登陆服务器校验连接对象
+	/// 创建UDP监听登陆服务器对象
 	bool  StartUDPService(void);
-	// 运行创建TCP监听客户端连接对象
+	/// 创建TCP监听客户端对象
 	bool  StartTCPService(void);
 
-	// 停止连接游戏DB服务器
+	/// 停止连接游戏DB服务器
 	void  StopConnectGameDBServer(void);
-	// 停止连接游戏服务器
+	/// 停止连接游戏服务器
 	void  StopConnectGameServer(void);
-	// 停止UDP监听登陆服务器
+	/// 停止UDP监听登陆服务器
 	void  StopUDPService(void);
-	// 停止TCP监听客户端
+	/// 停止TCP监听客户端
 	void  StopTCPService(void);
 
-	// 处理游戏DB服务器的信令包
+	/// 处理游戏DB服务器的信令包
 	bool  DispatchGameDBServer(const PacketPtr& PktPtr, KeyRef krSocket);
-	// 处理游戏服务器的信令包
+	/// 处理游戏服务器的信令包
 	bool  DispatchGameServer(const PacketPtr& PktPtr, KeyRef krSocket);
 
-	// 连接游戏DB服务器
+	/// 向游戏DB服务器注册
 	void  LinkGameDBServer(void);
-	// 断连游戏DB服务器
+	/// 向游戏DB服务器注销
 	void  UnlinkGameDBServer(void);
-	// 连接游戏服务器
+	/// 向游戏服务器注册
 	void  LinkGameServer(void);
-	// 断连游戏服务器
+	/// 向游戏服务器注销
 	void  UnlinkGameServer(void);
 
-	// 定时检测连接游戏DB服务器的连接对象是否有效
+	/// 定时检测连接游戏DB服务器对象是否有效
 	bool  CheckConnectGameDBServer(void);
-	// 定时检测连接游戏服务器的连接对象是否有效
+	/// 定时检测连接游戏服务器对象是否有效
 	bool  CheckConnectGameServer(void);
-	// 定时检测UDP监听登陆服务器的连接对象是否有效
+	/// 定时检测UDP监听登陆服务器对象是否有效
 	bool  CheckUDPService(void);
-	// 定时检测TCP监听客户端的连接对象是否有效
+	/// 定时检测TCP监听客户端对象是否有效
 	bool  CheckTCPService(void);
 
 	// 同步服务器信息给界面
 	bool  SyncServerInfo(void);
 private:
-	Int                 m_nStatus;          // 服务器状态
-	bool                m_bGameDBCnnted;
-	bool                m_bGameDBLinked;
-	bool                m_bGameCnnted;
-	bool                m_bGameLinked;
-	CEventHandler*      m_pUIHandler;       // 界面回调接口
-	CServerConfig*      m_pConfig;          // 配置对象
-	KeyRef              m_krConnectGameDB;  // 内网, 连接游戏DB服务器
-	KeyRef              m_krConnectGame;    // 内网, 连接游戏服务器
-	KeyRef              m_krUDPService;     // 内网, 监听登陆服务器
-	KeyRef              m_krTCPService;     // 外网, 监听客户端
-	ICommonServer*      m_pShareGameDBSvr;
-	ICommonServer*      m_pShareGameSvr;
-	CFileLog            m_FileLog;          // 简单文本日志
-	CNetworkPtr         m_NetworkPtr;       // 网络对象
-	CCommonRoutinePtr   m_GateRoutine;      //
-	GATE_ADDR           m_ServerInfo;       // 本服务器信息 
+	Int                 m_nStatus;          ///< 服务器状态
+	Int                 m_nGameId;          ///< 连接的游戏服务器Id
+	bool                m_bGameDBCnnted;    ///< 是否连接游戏DB服务器完成
+	bool                m_bGameDBLinked;    ///< 是否向游戏DB服务器注册完成
+	bool                m_bGameCnnted;      ///< 是否连接游戏服务器完成
+	bool                m_bGameLinked;      ///< 是否向游戏服务器注册完成
+	CEventHandler*      m_pUIHandler;       ///< 界面回调接口
+	CServerConfig*      m_pConfig;          ///< 配置对象
+	KeyRef              m_krConnectGameDB;  ///< 内网, 连接游戏DB服务器
+	KeyRef              m_krConnectGame;    ///< 内网, 连接游戏服务器
+	KeyRef              m_krUDPService;     ///< 内网, 监听登陆服务器
+	KeyRef              m_krTCPService;     ///< 外网, 监听客户端
+	ICommonServer*      m_pShareGameDBSvr;  ///< 同进程游戏DB服务器
+	ICommonServer*      m_pShareGameSvr;    ///< 同进程游戏服务器
+	CFileLog            m_FileLog;          ///< 简单文本日志
+	CNetworkPtr         m_NetworkPtr;       ///< 网络对象
+	CCommonRoutinePtr   m_GateRoutine;      ///< 游戏事务处理 
+	GATE_ADDR           m_ServerInfo;       ///< 本服务器信息 
 };
 
 INLINE CGateServer::CGateServer(void)
 : m_nStatus(STATUSC_NONE)
+, m_nGameId(0)
 , m_bGameDBCnnted(false)
 , m_bGameDBLinked(false)
 , m_bGameCnnted(false)
@@ -168,6 +172,7 @@ INLINE CGateServer::~CGateServer(void)
 
 INLINE CGateServer::CGateServer(const CGateServer&)
 : m_nStatus(STATUSC_NONE)
+, m_nGameId(0)
 , m_bGameDBCnnted(false)
 , m_bGameDBLinked(false)
 , m_bGameCnnted(false)
@@ -197,6 +202,11 @@ INLINE bool CGateServer::OnShareRoutine(Int, uintptr_t, LLong, CEventQueue::EVEN
 INLINE bool CGateServer::OnShareRoutine(Int, CStream&, LLong)
 {
 	return false;
+}
+
+INLINE Int CGateServer::GetGameId(void)
+{
+	return m_nGameId;
 }
 
 INLINE CEventHandler* CGateServer::GetUIHandler(void)

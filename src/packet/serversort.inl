@@ -5,7 +5,7 @@
 //   Inline File : serversort.inl                               //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
+//   Update : 2015-11-25     version 0.0.0.5                    //
 //   Detail : 信息数据                                           //
 //                                                              //
 //////////////////////////////////////////////////////////////////
@@ -16,7 +16,7 @@
 #pragma once
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// tagSERVER_SORT : 服务器排序信息结构定义
+// tagSERVER_SORT : 快速排序服务器负载情况
 INLINE void tagSERVER_SORT::QuickSort(tagSERVER_SORT* pSort, Int nCount)
 {
 	QuickSortRecursion(pSort, 0, nCount);
@@ -76,7 +76,7 @@ INLINE tagSERVER_SORT::~tagSERVER_SORT(void)
 {
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// tagSORT_RESULT : 服务器按繁忙排序结果
+// tagSORT_RESULT : 服务器按负载情况排序结果数组
 INLINE tagSORT_RESULT::tagSORT_RESULT(void)
 : lIndex(0)
 , lCount(0)
@@ -112,7 +112,7 @@ INLINE Long tagSORT_RESULT::Index(void)
 	return lRet;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// tagRESULT_CHAIN : 服务器按繁忙排序结果定时交换链
+// tagRESULT_CHAIN : 服务器按负载情况排序结果数组交换链
 INLINE tagRESULT_CHAIN::tagRESULT_CHAIN(void)
 : lIndex(0)
 {

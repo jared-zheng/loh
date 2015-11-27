@@ -5,8 +5,8 @@
 //   Header File : LoginDBDlg.h                                 //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
-//   Detail : 登陆DB服务器管理界面对话框                          //
+//   Update : 2015-11-25     version 0.0.0.5                    //
+//   Detail : 登陆DB服务器界面对话框                              //
 //                                                              //
 //////////////////////////////////////////////////////////////////
 
@@ -18,7 +18,7 @@
 #include "CommonDlg.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CLoginDBDlg
+/// 登陆DB服务器界面对话框
 class CLoginDBDlg : public CCommonDlg
 {
 public:
@@ -48,9 +48,9 @@ private:
 
 	virtual CXListView* GetListView(Int nServerIndex) OVERRIDE;
 private:
-	UInt                   m_uLoginDBOnline; // 登陆DB服务器连接登陆服务器当前在线数量
-	UInt                   m_uLoginDBAll;    // 登陆DB服务器连接登陆服务器总数量
-	UInt                   m_uLoginDBBusy;   // 登陆DB服务器繁忙程度
+	UInt                   m_uLoginDBOnline;
+	UInt                   m_uLoginDBAll;   
+	UInt                   m_uLoginDBBusy;  
 	CXStatic               m_ListenLogin;
 	CXStatic               m_ServerInfo;
 	CXListView             m_LoginSvr;

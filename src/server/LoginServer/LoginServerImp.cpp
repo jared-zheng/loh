@@ -5,12 +5,13 @@
 //   Source File : LoginServerImp.cpp                           //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
-//   Detail : 登陆服务器管理实现                                 //
+//   Update : 2015-11-25     version 0.0.0.5                    //
+//   Detail : 登陆服务器实现                                     //
 //                                                              //
 //////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
+#include "timescope.h"
 #include "LoginServerImp.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -52,11 +53,11 @@ UInt CLoginServer::Init(CEventHandler& EventHandlerRef)
 	}
 	return (UInt)RET_FAIL;
 }
-// 获取共享的配置对象和网络对象
+
 bool CLoginServer::InitLoadShare(void)
 {
 	assert(m_pConfig == nullptr);
-	m_pUIHandler->OnHandle(CServerConfig::CFG_DEFAULT_CONFIG, reinterpret_cast<uintptr_t>(&m_pConfig), DATA_INDEX_LOGIN);
+	m_pUIHandler->OnHandle(CServerConfig::CFG_CONFIG_PTR, reinterpret_cast<uintptr_t>(&m_pConfig), DATA_INDEX_LOGIN);
 	if (m_pConfig == nullptr) {
 		LOG_ERROR(m_FileLog, TF("[登陆服务器]从同进程共享数据回调接口获取配置对象指针无效"));
 		return false;
@@ -75,7 +76,7 @@ bool CLoginServer::InitLoadShare(void)
 	m_NetworkPtr = *(reinterpret_cast<CNetworkPtr*>(xValue.pValue));
 	return true;
 }
-// 初始化配置
+
 bool CLoginServer::InitLoadConfig(void)
 {
 	assert(m_krConnectCenter == nullptr);
@@ -124,7 +125,7 @@ void CLoginServer::Exit(void)
 		LOG_INFO(m_FileLog, TF("[登陆服务器]登陆服务退出处理完成!"));
 	}
 }
-// 清除共享的配置对象和网络对象
+
 void CLoginServer::ExitUnloadShare(void)
 {
 	m_pConfig    = nullptr;
@@ -163,7 +164,7 @@ bool CLoginServer::Start(void)
 	}
 	return true;
 }
-// 运行创建连接中心服务器的连接对象
+
 bool CLoginServer::StartConnectCenterServer(void)
 {
 	// 登陆和中心在不同进程,  需要连接内网中心服务器
@@ -175,8 +176,8 @@ bool CLoginServer::StartConnectCenterServer(void)
 			m_krConnectCenter = m_NetworkPtr->Create(*this, usPort, *strAddr);
 		}
 		if (m_krConnectCenter != nullptr) {
+			LOG_INFO(m_FileLog, TF("[登陆服务器]登陆服务器和中心服务器在不同进程, 创建连接中心服务器对象成功"));
 			if (m_bCenterCnnted == false) {
-				LOG_INFO(m_FileLog, TF("[登陆服务器]登陆服务器和中心服务器在不同进程, 创建连接中心服务器Socket成功"));
 				UShort      usPort = 0;
 				CStringKey  strAddr;
 				m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_LOGIN, strAddr, usPort);
@@ -188,7 +189,7 @@ bool CLoginServer::StartConnectCenterServer(void)
 			}
 		}
 		else {
-			LOG_ERROR(m_FileLog, TF("[登陆服务器]登陆服务器和中心服务器在不同进程, 创建连接中心服务器Socket失败"));
+			LOG_ERROR(m_FileLog, TF("[登陆服务器]登陆服务器和中心服务器在不同进程, 创建连接中心服务器对象失败"));
 			return false;
 		}
 	}
@@ -203,7 +204,7 @@ bool CLoginServer::StartConnectCenterServer(void)
 		m_pShareCenterSvr = reinterpret_cast<ICommonServer*>(xValue.pValue);
 		m_bCenterCnnted = true;
 
-		LOG_INFO(m_FileLog, TF("[登陆服务器]同进程直接连接中心服务器"));
+		LOG_INFO(m_FileLog, TF("[登陆服务器]同进程直接向中心服务器注册"));
 		m_ServerInfo.usStatus = STATUSU_LINK;
 
 		CLoginLink Link;
@@ -219,7 +220,7 @@ bool CLoginServer::StartConnectCenterServer(void)
 	}
 	return true;
 }
-// 运行创建连接登陆DB服务器的连接对象
+
 bool CLoginServer::StartConnectLoginDBServer(void)
 {
 	// 登陆和登陆DB在不同进程,  需要连接内网登陆DB服务器
@@ -231,8 +232,8 @@ bool CLoginServer::StartConnectLoginDBServer(void)
 			m_krConnectLoginDB = m_NetworkPtr->Create(*this, usPort, *strAddr);
 		}
 		if (m_krConnectLoginDB != nullptr) {
+			LOG_INFO(m_FileLog, TF("[登陆服务器]登陆服务器和登陆DB服务器在不同进程, 创建连接登陆DB服务器对象成功"));
 			if (m_bLoginDBCnnted == false) {
-				LOG_INFO(m_FileLog, TF("[登陆服务器]登陆服务器和登陆DB服务器在不同进程, 创建连接登陆DB服务器Socket成功"));
 				if (m_NetworkPtr->Connect(m_krConnectLoginDB, m_ServerInfo.NetAddr[LOGINI_LOGINDB]) == false) {
 					LOGV_ERROR(m_FileLog, TF("[登陆服务器]连接登陆DB服务器请求失败"));
 					return false;
@@ -241,7 +242,7 @@ bool CLoginServer::StartConnectLoginDBServer(void)
 			}
 		}
 		else {
-			LOG_ERROR(m_FileLog, TF("[登陆服务器]登陆服务器和登陆DB服务器在不同进程, 创建连接中心服务器Socket失败"));
+			LOG_ERROR(m_FileLog, TF("[登陆服务器]登陆服务器和登陆DB服务器在不同进程, 创建连接中心服务器对象失败"));
 			return false;
 		}
 	}
@@ -256,7 +257,7 @@ bool CLoginServer::StartConnectLoginDBServer(void)
 		m_pShareLoginDBSvr = reinterpret_cast<ICommonServer*>(xValue.pValue);
 		m_bLoginDBCnnted = true;
 
-		LOG_INFO(m_FileLog, TF("[登陆服务器]同进程直接连接登陆DB服务器"));
+		LOG_INFO(m_FileLog, TF("[登陆服务器]同进程直接向登陆DB服务器注册"));
 		m_ServerInfo.usStatus = STATUSU_LINK;
 
 		CLoginLink Link;
@@ -272,7 +273,7 @@ bool CLoginServer::StartConnectLoginDBServer(void)
 	}
 	return true;
 }
-// 运行创建UDP监听游戏服务器校验连接对象
+
 bool CLoginServer::StartUDPService(void)
 {
 	if (m_krUDPService == nullptr) {
@@ -302,21 +303,20 @@ bool CLoginServer::StartUDPService(void)
 	return true;
 }
 
-// 运行创建监听客户端连接对象
 bool CLoginServer::StartTCPService(void)
 {
 	if (m_krTCPService != nullptr) {
-		LOGV_INFO(m_FileLog, TF("[登陆服务器]创建监听客户端的连接已经存在"));
+		LOGV_INFO(m_FileLog, TF("[登陆服务器]创建监听客户端对象已经存在"));
 		return true;
 	}
 	bool bRet = true;
 	m_krTCPService = m_NetworkPtr->Create(*this, m_ServerInfo.NetAddr[LOGINI_TCP]);
 	if (m_krTCPService != nullptr) {
 		bRet = m_NetworkPtr->Listen(m_krTCPService);
-		LOGV_INFO(m_FileLog, TF("[登陆服务器]创建监听客户端的连接成功, %s"), bRet ? TF("监听连接成功") : TF("监听连接失败"));
+		LOGV_INFO(m_FileLog, TF("[登陆服务器]创建监听客户端对象成功, %s"), bRet ? TF("监听操作成功") : TF("监听操作失败"));
 	}
 	else {
-		LOGV_ERROR(m_FileLog, TF("[登陆服务器]创建监听客户端的连接失败"));
+		LOGV_ERROR(m_FileLog, TF("[登陆服务器]创建监听客户端对象失败"));
 		bRet = false;
 	}
 	return bRet;
@@ -348,7 +348,7 @@ void CLoginServer::Stop(void)
 		StopConnectCenterServer();
 
 		m_ServerInfo.Zero();
-		m_GameInfo.Reset();
+		m_GameSvrInfo.Reset();
 		m_GameSvrMap.RemoveAll();
 		m_SessionMap.RemoveAll();
 
@@ -356,47 +356,47 @@ void CLoginServer::Stop(void)
 		LOG_INFO(m_FileLog, TF("[登陆服务器]登陆服务停止完成!"));
 	}
 }
-// 停止连接中心服务器
+
 void CLoginServer::StopConnectCenterServer(void)
 {
 	if (m_krConnectCenter != nullptr) {
 		m_NetworkPtr->Destroy(m_krConnectCenter, false);
 		m_krConnectCenter = nullptr;
-		LOG_INFO(m_FileLog, TF("[登陆服务器]销毁连接中心服务器的连接成功"));
+		LOG_INFO(m_FileLog, TF("[登陆服务器]销毁连接中心服务器对象成功"));
 	}
 	m_bCenterCnnted   = false;
 	m_bCenterLinked   = false;
 	m_pShareCenterSvr = nullptr;
 }
-// 停止连接登陆DB服务器
+
 void CLoginServer::StopConnectLoginDBServer(void)
 {
 	if (m_krConnectLoginDB != nullptr) {
 		m_NetworkPtr->Destroy(m_krConnectLoginDB, false);
 		m_krConnectLoginDB = nullptr;
-		LOG_INFO(m_FileLog, TF("[登陆服务器]销毁连接登陆DB服务器的连接成功"));
+		LOG_INFO(m_FileLog, TF("[登陆服务器]销毁连接登陆DB服务器对象成功"));
 	}
 	m_bLoginDBCnnted   = false;
 	m_bLoginDBLinked   = false;
 	m_pShareLoginDBSvr = nullptr;
 }
-// 停止UDP监听游戏服务器
+
 void CLoginServer::StopUDPService(void)
 {
 	if (m_krUDPService != nullptr) {
 		m_NetworkPtr->Destroy(m_krUDPService, false);
 		m_krUDPService = nullptr;
-		LOG_INFO(m_FileLog, TF("[登陆服务器]销毁UDP服务的连接成功"));
+		LOG_INFO(m_FileLog, TF("[登陆服务器]销毁UDP服务对象成功"));
 	}
 	m_pShareGameSvr = nullptr;
 }
-// 停止监听客户端连接
+
 void CLoginServer::StopTCPService(void)
 {
 	if (m_krTCPService != nullptr) {
 		m_NetworkPtr->Destroy(m_krTCPService, false);
 		m_krTCPService = nullptr;
-		LOG_INFO(m_FileLog, TF("[登陆服务器]销毁监听客户端的连接成功"));
+		LOG_INFO(m_FileLog, TF("[登陆服务器]销毁监听客户端对象成功"));
 	}
 }
 //--------------------------------------
@@ -450,17 +450,17 @@ bool CLoginServer::OnShareRoutine(Int nEvent, CStream& Stream, LLong)
 {
 	assert((m_pConfig->GetLoadServers() & CServerConfig::CFG_DEFAULT_CENTER) != 0);
 	if (nEvent == PAK_EVENT_SYNC) {
-		LOGV_INFO(m_FileLog, TF("[登陆服务器]同进程同步游戏服务器信息"));
+		LOGV_INFO(m_FileLog, TF("[登陆服务器]同进程中心服务器同步游戏服务器信息"));
 		CStreamScopePtr StreamPtr;
 		if (m_NetworkPtr->ReferBuffer(StreamPtr, Stream)) { // 同进程的Stream是写模式, 创建一个读模式的引用
 			CPAKSync Sync;
 			Sync.Serialize(*StreamPtr);
 
-			m_GameInfo.Copy(Sync.GetServerData());
+			m_GameSvrInfo.Copy(Sync.GetServerData());
 			SyncGameServerInfo(*StreamPtr);
 		}
 		else {
-			LOGV_WARN(m_FileLog, TF("[登陆服务器]同进程同步游戏服务器信息错误"));
+			LOGV_WARN(m_FileLog, TF("[登陆服务器]同进程中心服务器同步游戏服务器信息创建读引用错误"));
 		}
 	}
 	else {
@@ -496,7 +496,7 @@ bool CLoginServer::OnTcpDispatch(const PacketPtr& PktPtr, PTCP_PARAM pTcp)
 			break;
 		default:
 			{
-				LOGV_WARN(m_FileLog, TF("[登陆服务器]%p连接信令包类型[%d]不正确"), pTcp->krSocket, PktPtr->GetType());
+				LOGV_WARN(m_FileLog, TF("[登陆服务器]%p信令包类型[%d]不正确"), pTcp->krSocket, PktPtr->GetType());
 				bRet = false;
 			}
 		}
@@ -508,7 +508,7 @@ bool CLoginServer::OnTcpDispatch(const PacketPtr& PktPtr, PTCP_PARAM pTcp)
 	}
 	return bRet;
 }
-// 处理中心服务器的信令包
+
 bool CLoginServer::DispatchCenterServer(const PacketPtr& PktPtr, KeyRef krSocket)
 {
 	switch (PktPtr->GetEvent()) {
@@ -519,7 +519,7 @@ bool CLoginServer::DispatchCenterServer(const PacketPtr& PktPtr, KeyRef krSocket
 			NET_ADDR NetAddr;
 			m_NetworkPtr->GetAddr(krSocket, NetAddr, false);
 			m_pUIHandler->OnHandle(PAK_EVENT_LINK, reinterpret_cast<uintptr_t>(&NetAddr), DATA_INDEX_CENTER);
-			LOG_INFO(m_FileLog, TF("[登陆服务器]收到中心服务器连接回复包"));
+			LOG_INFO(m_FileLog, TF("[登陆服务器]收到中心服务器注册回复包"));
 		}
 		break;
 	case PAK_EVENT_UPDATEACK:
@@ -531,7 +531,7 @@ bool CLoginServer::DispatchCenterServer(const PacketPtr& PktPtr, KeyRef krSocket
 		{
 			DEV_INFO(TF("[登陆服务器]中心服务器同步游戏服务器信息"));
 			CPAKSync* pSync = static_cast<CPAKSync*>(PktPtr.Get());
-			m_GameInfo.Copy(pSync->GetServerData());
+			m_GameSvrInfo.Copy(pSync->GetServerData());
 
 			if (pSync->CheckStream()) {
 				SyncGameServerInfo(pSync->GetStream());
@@ -545,7 +545,7 @@ bool CLoginServer::DispatchCenterServer(const PacketPtr& PktPtr, KeyRef krSocket
 	case PAK_EVENT_UNLINKACK:
 		{
 			m_bCenterLinked = false;
-			LOG_INFO(m_FileLog, TF("[登陆服务器]收到中心服务器断接回复包"));
+			LOG_INFO(m_FileLog, TF("[登陆服务器]收到中心服务器注销回复包"));
 		}
 		break;
 	case PAK_EVENT_LIVEACK:
@@ -554,12 +554,12 @@ bool CLoginServer::DispatchCenterServer(const PacketPtr& PktPtr, KeyRef krSocket
 		break;
 	default:
 		{
-			LOGV_WARN(m_FileLog, TF("[登陆服务器]%p连接信息无法识别的中心服务器信令包数据[event=%d]"), krSocket, PktPtr->GetEvent());
+			LOGV_WARN(m_FileLog, TF("[登陆服务器]%p无法识别的中心服务器信令包数据[event=%d]"), krSocket, PktPtr->GetEvent());
 		}
 	}
 	return true;
 }
-// 处理登陆DB服务器的信令包
+
 bool CLoginServer::DispatchLoginDBServer(const PacketPtr& PktPtr, KeyRef krSocket)
 {
 	switch (PktPtr->GetEvent()) {
@@ -570,7 +570,7 @@ bool CLoginServer::DispatchLoginDBServer(const PacketPtr& PktPtr, KeyRef krSocke
 			NET_ADDR NetAddr;
 			m_NetworkPtr->GetAddr(krSocket, NetAddr, false);
 			m_pUIHandler->OnHandle(PAK_EVENT_LINK, reinterpret_cast<uintptr_t>(&NetAddr), DATA_INDEX_LOGINDB);
-			LOG_INFO(m_FileLog, TF("[登陆服务器]收到登陆DB服务器连接回复包"));
+			LOG_INFO(m_FileLog, TF("[登陆服务器]收到登陆DB服务器注册回复包"));
 		}
 		break;
 	case PAK_EVENT_UPDATEACK:
@@ -581,7 +581,7 @@ bool CLoginServer::DispatchLoginDBServer(const PacketPtr& PktPtr, KeyRef krSocke
 	case PAK_EVENT_UNLINKACK:
 		{
 			m_bLoginDBLinked = false;
-			LOG_INFO(m_FileLog, TF("[登陆服务器]收到登陆DB服务器断接回复包"));
+			LOG_INFO(m_FileLog, TF("[登陆服务器]收到登陆DB服务器注销回复包"));
 		}
 		break;
 	case PAK_EVENT_LOGIN_LINKACK:
@@ -600,12 +600,12 @@ bool CLoginServer::DispatchLoginDBServer(const PacketPtr& PktPtr, KeyRef krSocke
 		break;
 	default:
 		{
-			LOGV_WARN(m_FileLog, TF("[登陆服务器]%p连接信息无法识别的登陆DB服务器信令包数据[event=%d]"), krSocket, PktPtr->GetEvent());
+			LOGV_WARN(m_FileLog, TF("[登陆服务器]%p无法识别的登陆DB服务器信令包数据[event=%d]"), krSocket, PktPtr->GetEvent());
 		}
 	}
 	return true;
 }
-// 处理游戏客户端的信令包
+
 bool CLoginServer::DispatchGameService(const PacketPtr& PktPtr, KeyRef krSocket)
 {
 	bool bRet = false;
@@ -626,20 +626,20 @@ bool CLoginServer::DispatchGameService(const PacketPtr& PktPtr, KeyRef krSocket)
 		}
 		break;
 	case PAK_EVENT_LINK:
-		{	// 客户端需要主动连接来避免网络层ACK断开
+		{	// 客户端需要主动注册来避免网络层ACK断开
 			m_NetworkPtr->SetAttr(krSocket, PAK_TYPE_CLIENT_READY);
 			CPAKSimple<PAK_EVENT_LINKACK, PAK_TYPE_LOGIN> LinkAck;
 			LinkAck.AdjustSize();
 			bRet = m_NetworkPtr->Send(krSocket, LinkAck);
 		}
 		break;
-	case PAK_EVENT_UNLINK: // 客户端主动断开连接
+	case PAK_EVENT_UNLINK: // 客户端主动注销
 		{
 		}
 		break;
 	default:
 		{
-			LOGV_WARN(m_FileLog, TF("[登陆服务器]%p连接信息无法识别的客户端信令包数据[event=%d]"), krSocket, PktPtr->GetEvent());
+			LOGV_WARN(m_FileLog, TF("[登陆服务器]%p无法识别的客户端信令包数据[event=%d]"), krSocket, PktPtr->GetEvent());
 		}
 	}
 	return bRet;
@@ -659,7 +659,7 @@ bool CLoginServer::OnClientLink(CPAKLoginLink* pLink, KeyRef krSocket)
 			m_SessionMap.Add((DataRef)krSocket, sd);
 			uAck = DATAD_OKAY;
 		}
-		else if (pPair->m_V.nStatus == SESSION_DATA::SESSION_STATUS_NONE) { // 登陆失败
+		else if (pPair->m_V.nStatus == SESSION_DATA::SESSION_STATUS_NONE) { // 登陆失败或者注销
 			pPair->m_V.nStatus   = SESSION_DATA::SESSION_STATUS_LINK;
 			pPair->m_V.llTimeout = sd.llTimeout;
 			uAck = DATAD_OKAY;
@@ -692,10 +692,10 @@ bool CLoginServer::OnClientUnlink(CPAKLoginUnlink* pUnlink, KeyRef krSocket)
 		CSyncLockWaitScope scope(m_SessionMap.GetLock());
 		SESSION_MAP::DATA_MAP_PAIR* pPair = m_SessionMap.Find((DataRef)krSocket);
 		if (pPair != nullptr) {
-			// session &  UNLINK > status >= LINKACK
+			// session &  LINKACK <= status < UNLINK
 			if ( (pUnlink->GetSessionId() == reinterpret_cast<LLong>(pPair))  &&
 				 (pPair->m_V.nStatus >= SESSION_DATA::SESSION_STATUS_LINKACK) &&
-				 (pPair->m_V.nStatus < SESSION_DATA::SESSION_STATUS_UNLINK) ) {
+				 (pPair->m_V.nStatus <  SESSION_DATA::SESSION_STATUS_UNLINK) ) {
 
 				pPair->m_V.nStatus   = SESSION_DATA::SESSION_STATUS_UNLINK;
 				pPair->m_V.llTimeout = CPlatform::GetRunningTime();
@@ -705,7 +705,7 @@ bool CLoginServer::OnClientUnlink(CPAKLoginUnlink* pUnlink, KeyRef krSocket)
 				pUnlink->SetUserId(pPair->m_V.llUserId);
 				pUnlink->SetTime(pPair->m_V.llOnline);
 				pUnlink->SetGameId(pPair->m_V.nGameId);
-				pUnlink->SetCltLast(pPair->m_V.CltLast);
+				pUnlink->SetCltLast(pPair->m_V.CltAddr);
 
 				uAck = DATAD_OKAY;
 			}
@@ -742,7 +742,6 @@ bool CLoginServer::OnClientSelectGame(CPAKLoginSelectGame* pSelect, KeyRef krSoc
 
 				pPair->m_V.nStatus     = SESSION_DATA::SESSION_STATUS_SELECT;
 				pPair->m_V.llTimeout   = CPlatform::GetRunningTime();
-				pPair->m_V.llGameIndex = llIndex;
 
 				pSelect->SetType(PAK_TYPE_LOGIN);
 				pSelect->SetAck(DATAD_OKAY);
@@ -764,10 +763,10 @@ bool CLoginServer::OnClientSelectGame(CPAKLoginSelectGame* pSelect, KeyRef krSoc
 			else {
 				m_NetworkPtr->SendTo(m_krUDPService, *pSelect, pGameSvr->m_V.NetAddr[GAMEI_UDP]);
 			}
-			DEV_INFO(TF("[登陆服务器]客户端请求登陆游戏服务器, 发送UserId=%llx的连接请求给对应的游戏服务器"), pSelect->GetAuthCode());
+			DEV_INFO(TF("[登陆服务器]客户端选择游戏服务器, 发送UserId=%llx的连接请求给对应的游戏服务器"), pSelect->GetAuthCode());
 		}
 		else {
-			DEV_INFO(TF("[登陆服务器]客户端请求登陆游戏服务器, 但游戏服务器信息[%llx]错误"), llIndex);
+			DEV_INFO(TF("[登陆服务器]客户端选择游戏服务器, 但游戏服务器信息[%llx]错误"), llIndex);
 			uAck = LOGIN_ERROR_GAME_INDEX;
 		}
 	}
@@ -807,7 +806,7 @@ bool CLoginServer::OnUdpDispatch(const PacketPtr& PktPtr, PUDP_PARAM pUdp)
 		break;
 	default:
 		{
-			LOGV_WARN(m_FileLog, TF("[登陆服务器]%p连接信息信令包类型[%d]不是游戏服务器类型"), pUdp->krSocket, PktPtr->GetType());
+			LOGV_WARN(m_FileLog, TF("[登陆服务器]%p信令包类型[%d]不是游戏服务器类型"), pUdp->krSocket, PktPtr->GetType());
 		}
 	}
 	return true;
@@ -820,7 +819,7 @@ bool CLoginServer::OnTcpAccept(KeyRef krAccept, KeyRef krListen)
 	if (m_nStatus == STATUSC_RUN) {
 		NET_ADDR ClientAddr;
 		m_NetworkPtr->GetAddr(krAccept, ClientAddr);
-		// 判断IP是否在黑名单中
+
 		if (CheckAddrBlacklist(ClientAddr) == false) {
 			UShort     usPort = 0;
 			CStringKey strAddr;
@@ -877,7 +876,7 @@ bool CLoginServer::OnTcpConnect(UInt uError, KeyRef krConnect)
 	}
 	return true;
 }
-// 连接中心服务器
+
 void CLoginServer::LinkCenterServer(void)
 {
 	if (m_bCenterCnnted && (m_bCenterLinked == false)) {
@@ -896,12 +895,12 @@ void CLoginServer::LinkCenterServer(void)
 			m_NetworkPtr->Send(m_krConnectCenter, *StreamPtr);
 		}
 		else {
-			DEV_WARN(TF("[登陆服务器]连接中心服务器创建网络数据流异常!"));
-			LOG_WARN(m_FileLog, TF("[登陆服务器]连接中心服务器创建网络数据流异常!"));
+			DEV_WARN(TF("[登陆服务器]向中心服务器注册时创建网络数据流异常!"));
+			LOG_WARN(m_FileLog, TF("[登陆服务器]向中心服务器注册时创建网络数据流异常!"));
 		}
 	}
 }
-// 断连中心服务器
+
 void CLoginServer::UnlinkCenterServer(void)
 {
 	if (m_bCenterCnnted && m_bCenterLinked) {
@@ -911,7 +910,7 @@ void CLoginServer::UnlinkCenterServer(void)
 		m_NetworkPtr->Send(m_krConnectCenter, Unlink);
 	}
 }
-// 连接登陆DB服务器
+
 void CLoginServer::LinkLoginDBServer(void)
 {
 	if (m_bLoginDBCnnted && (m_bLoginDBLinked == false)) {
@@ -930,12 +929,12 @@ void CLoginServer::LinkLoginDBServer(void)
 			m_NetworkPtr->Send(m_krConnectLoginDB, *StreamPtr);
 		}
 		else {
-			DEV_WARN(TF("[登陆服务器]连接登陆DB服务器创建网络数据流异常!"));
-			LOG_WARN(m_FileLog, TF("[登陆服务器]连接登陆DB服务器创建网络数据流异常!"));
+			DEV_WARN(TF("[登陆服务器]向登陆DB服务器注册时创建网络数据流异常!"));
+			LOG_WARN(m_FileLog, TF("[登陆服务器]向登陆DB服务器注册时创建网络数据流异常!"));
 		}
 	}
 }
-// 断连登陆DB服务器
+
 void CLoginServer::UnlinkLoginDBServer(void)
 {
 	if (m_bLoginDBCnnted && m_bLoginDBLinked)
@@ -954,24 +953,28 @@ bool CLoginServer::OnTcpClose(KeyRef krSocket, LLong llLiveData)
 		m_bCenterCnnted   = false;
 		m_bCenterLinked   = false;
 		m_pUIHandler->OnHandle(PAK_EVENT_UNLINK, 0, DATA_INDEX_CENTER);
-		DEV_INFO(TF("[登陆服务器]连接中心服务器连接断连/断开"));
+		DEV_INFO(TF("[登陆服务器]连接中心服务器断开"));
+		LOG_INFO(m_FileLog, TF("[登陆服务器]连接中心服务器断开"));
 	}
 	else if (krSocket == m_krConnectLoginDB) {
 		m_krConnectLoginDB = nullptr;
 		m_bLoginDBCnnted   = false;
 		m_bLoginDBLinked   = false;
 		m_pUIHandler->OnHandle(PAK_EVENT_UNLINK, 0, DATA_INDEX_LOGINDB);
-		DEV_INFO(TF("[登陆服务器]连接登陆DB服务器连接断连/断开"));
+		DEV_INFO(TF("[登陆服务器]连接登陆DB服务器断开"));
+		LOG_INFO(m_FileLog, TF("[登陆服务器]连接登陆DB服务器断开"));
 	}
 	else if (krSocket == m_krTCPService) {
 		m_krTCPService = nullptr;
-		DEV_INFO(TF("[登陆服务器]监听客户端连接关闭"));
+		DEV_INFO(TF("[登陆服务器]监听客户端关闭"));
+		LOG_INFO(m_FileLog, TF("[登陆服务器]监听客户端关闭"));
 	}
-	else { // 单个服务器断连/断开
+	else { // 单个服务器断开
 		switch (llLiveData) {
 		case PAK_TYPE_CLIENT_LOGIN:
 			{
-				DEV_INFO(TF("[登陆服务器]客户端[%p]断接"), krSocket);
+				DEV_INFO(TF("[登陆服务器]客户端[%p]断开"), krSocket);
+				LOGV_INFO(m_FileLog, TF("[登陆服务器]客户端[%p]断开"), krSocket);
 				CSyncLockWaitScope scope(m_SessionMap.GetLock());
 				SESSION_MAP::DATA_MAP_PAIR* pPair = m_SessionMap.Find((DataRef)krSocket);
 				if (pPair != nullptr) {
@@ -984,7 +987,7 @@ bool CLoginServer::OnTcpClose(KeyRef krSocket, LLong llLiveData)
 						UnlinkPtr->SetUserId(pPair->m_V.llUserId);
 						UnlinkPtr->SetTime(pPair->m_V.llOnline);
 						UnlinkPtr->SetGameId(pPair->m_V.nGameId);
-						UnlinkPtr->SetCltLast(pPair->m_V.CltLast);
+						UnlinkPtr->SetCltLast(pPair->m_V.CltAddr);
 						UnlinkPtr->AdjustSize();
 						if (m_pShareLoginDBSvr == nullptr) {
 							m_NetworkPtr->Send(m_krConnectLoginDB, *UnlinkPtr);
@@ -1020,7 +1023,7 @@ bool CLoginServer::OnUdpClose(KeyRef krSocket, LLong)
 {
 	if (krSocket == m_krUDPService){
 		m_krUDPService = nullptr;
-		DEV_INFO(TF("[登陆服务器]UDP监听游戏服务器关闭"));
+		DEV_INFO(TF("[登陆服务器]UDP监听游戏服务器对象关闭"));
 	}
 	return true;
 }
@@ -1072,7 +1075,7 @@ bool CLoginServer::CheckSessionTimeout(void)
 	}
 	return true;
 }
-// 定时检测连接中心服务器的连接对象是否有效
+
 bool CLoginServer::CheckConnectCenterServer(void)
 {
 	if (m_bCenterCnnted == false) {
@@ -1085,7 +1088,7 @@ bool CLoginServer::CheckConnectCenterServer(void)
 	}
 	return true;
 }
-// 定时检测连接登陆DB服务器的连接对象是否有效
+
 bool CLoginServer::CheckConnectLoginDBServer(void)
 {
 	if (m_bLoginDBCnnted == false) {
@@ -1098,7 +1101,7 @@ bool CLoginServer::CheckConnectLoginDBServer(void)
 	}
 	return true;
 }
-// 定时检测UDP监听游戏服务器的连接对象是否有效
+
 bool CLoginServer::CheckUDPService(void)
 {
 	if (m_krUDPService == nullptr) {
@@ -1106,7 +1109,7 @@ bool CLoginServer::CheckUDPService(void)
 	}
 	return true;
 }
-// 定时检测监听客户端的连接对象是否有效
+
 bool CLoginServer::CheckTCPService(void)
 {
 	if (m_krTCPService == nullptr) {
@@ -1115,7 +1118,6 @@ bool CLoginServer::CheckTCPService(void)
 	return true;
 }
 //--------------------------------------
-// 同步服务器信息给界面
 bool CLoginServer::SyncServerInfo(void)
 {
 	if (m_ServerInfo.usStatus == STATUSU_SYNC) {
@@ -1151,30 +1153,30 @@ bool CLoginServer::SyncServerInfo(void)
 	}
 	return true;
 }
-// 同步游戏服务器负载情况数组并同步给界面
+
 bool CLoginServer::SyncGameServerInfo(CStream& Stream)
 {
 	LLong llPos = (LLong)Stream.Tell();
 	m_pUIHandler->OnHandle(PAK_EVENT_SYNC, Stream, DATA_INDEX_GAME);
-	m_pUIHandler->OnHandle(PAK_EVENT_SYNC, reinterpret_cast<uintptr_t>(&m_GameInfo), DATA_INDEX_GAME);
+	m_pUIHandler->OnHandle(PAK_EVENT_SYNC, reinterpret_cast<uintptr_t>(&m_GameSvrInfo), DATA_INDEX_GAME);
 
 	Stream.Seek(llPos); // 跳转到数据开始的地方
 
 	CSyncLockWaitScope scope(m_GameSvrMap.GetLock());
 	return m_GameSvrMap.Serialize(Stream);
 }
-// 同步游戏服务器信息给客户端
+
 bool CLoginServer::SyncGameServerInfo(void)
 {
 	// 3. TODO!!!这么没有考虑数据超出流对象保存上限的问题, 这里只是使用jumbo buffer发送, 
 	//    后期如果不满足分多个buffer/jumbo buffer发送, 默认jumbo buffer可以最多发送同类型120个服务器的全部信息,
 	//    目前同步发送只有在中心服务器同步服务器信息给选择和登陆时存在, 还有登陆服务器同步游戏服务器信息给客户端
-	if (m_GameInfo.usStatus == STATUSU_SYNC) {
+	if (m_GameSvrInfo.usStatus == STATUSU_SYNC) {
 		CStreamScopePtr StreamPtr;
 		m_NetworkPtr->AllocJumboBuffer(StreamPtr);
 		if (StreamPtr != nullptr) {
 			CLoginSync Sync;
-			Sync.SetServerData(m_GameInfo);
+			Sync.SetServerData(m_GameSvrInfo);
 			Sync.Serialize(*StreamPtr);
 
 			bool bRet = false;
@@ -1182,23 +1184,19 @@ bool CLoginServer::SyncGameServerInfo(void)
 			if (bRet) {
 				if (m_NetworkPtr->Send(nullptr, *StreamPtr, SEND_BROADCAST_AS, PAK_TYPE_CLIENT_LOGIN)) {
 					CSyncLockWaitScope scope(m_GameSvrMap.GetLock());
-					m_GameSvrMap.Update(); // 同步完成, 更新状态和清除断连的数据
-					m_GameInfo.usStatus = STATUSU_OKAY;
+					m_GameSvrMap.Update();
+					m_GameSvrInfo.usStatus = STATUSU_OKAY;
 				}
-			}
-			else { // 没有更新内容
-				DEV_INFO(TF("[登陆服务器]同步游戏服务器信息给客户端发现没有同步数据2"));
 			}
 		}
 		return false;
 	}
 	else {
-		DEV_INFO(TF("[登陆服务器]同步游戏服务器信息给客户端发现没有同步数据1"));
+		DEV_INFO(TF("[登陆服务器]同步游戏服务器信息给客户端发现没有同步数据"));
 	}
 	return true;
 }
 //--------------------------------------
-// 发送登陆处理结果给客户端
 void CLoginServer::GameLinkAck(CPAKSessionAck* pAck)
 {
 	CSyncLockWaitScope scope(m_SessionMap.GetLock());
@@ -1215,7 +1213,7 @@ void CLoginServer::GameLinkAck(CPAKSessionAck* pAck)
 			m_NetworkPtr->AllocJumboBuffer(StreamPtr);
 			if (StreamPtr != nullptr) {
 				pAck->Serialize(*StreamPtr);
-				StreamPtr->Write(&m_GameInfo, sizeof(SERVER_INFO));
+				StreamPtr->Write(&m_GameSvrInfo, sizeof(SERVER_INFO));
 
 				{ CSyncLockWaitScope gamescope(m_GameSvrMap.GetLock());  m_GameSvrMap.Serialize(*StreamPtr, STATUSU_OKAYSYNC|STATUSU_PING); }
 
@@ -1225,11 +1223,13 @@ void CLoginServer::GameLinkAck(CPAKSessionAck* pAck)
 				CPAKLoginLinkAck* pLinkAck = static_cast<CPAKLoginLinkAck*>(pAck);
 				pPair->m_V.llUserId  = pLinkAck->GetUserId();
 				pPair->m_V.llTimeout = CPlatform::GetRunningTime();
-				pPair->m_V.llOnline  = CPlatform::GetRunningTime();
+
+				CTime time;
+				pPair->m_V.llOnline  = time.GetTime();
 				pPair->m_V.nGameId   = pLinkAck->GetGameId();
 				pPair->m_V.nStatus   = SESSION_DATA::SESSION_STATUS_LINKACK;
 				pPair->m_V.nCount    = 0;
-				m_NetworkPtr->GetAddr((KeyRef)pPair->m_K, pPair->m_V.CltLast);
+				m_NetworkPtr->GetAddr((KeyRef)pPair->m_K, pPair->m_V.CltAddr);
 			}
 			else {
 				DEV_WARN(TF("[登陆服务器]创建缓存用于处理PAK_EVENT_LOGIN_LINKACK时创建失败"));
@@ -1260,10 +1260,10 @@ void CLoginServer::GameLinkAck(CPAKSessionAck* pAck)
 		}
 	}
 	else {
-		LOGV_WARN(m_FileLog, TF("[登陆服务器]登陆DB服务器处理的请求返回时无法查找到SessionId[%llx]数据或者Session状态不匹配"), pAck->GetSessionId());
+		LOGV_WARN(m_FileLog, TF("[登陆服务器]登陆DB服务器处理的登陆请求返回时无法查找到SessionId[%llx]数据或者Session状态不匹配"), pAck->GetSessionId());
 	}
 }
-// 发送登出处理结果给客户端
+
 void CLoginServer::GameUnlinkAck(CPAKSessionAck* pAck)
 {
 	assert(pAck->GetSessionId() > 0); // 断开客户端的SessionId为0
@@ -1284,10 +1284,10 @@ void CLoginServer::GameUnlinkAck(CPAKSessionAck* pAck)
 		m_NetworkPtr->Send((KeyRef)pPair->m_K, UnlinkAck, nFlag);
 	}
 	else {
-		LOGV_WARN(m_FileLog, TF("[登陆服务器]登陆DB服务器处理的请求返回时无法查找到SessionId[%llx]数据或者Session状态不匹配"), pAck->GetSessionId());
+		LOGV_WARN(m_FileLog, TF("[登陆服务器]登陆DB服务器处理的登出请求返回时无法查找到SessionId[%llx]数据或者Session状态不匹配"), pAck->GetSessionId());
 	}
 }
-// 选择游戏服务器回复包
+
 void CLoginServer::SelectGameAck(CPAKSessionAck* pAck)
 {
 	DEV_INFO(TF("[登陆服务器]收到%d类型服务器的选择游戏服务器回复包%d[%llx]"), pAck->GetType(), pAck->GetAck(), pAck->GetSessionId());
@@ -1304,18 +1304,21 @@ void CLoginServer::SelectGameAck(CPAKSessionAck* pAck)
 			LLong llTemp = (LLong)pPair->m_K;
 			/////////////////////////////////////////////////////////////////
 			// 加密AuthCode(与客户端唯一性信息有关, 例如异或IP)
-			if (pPair->m_V.CltLast.usAttr & ATTR_IPV6) {
-				llTemp ^= pPair->m_V.CltLast.Addr.ullAddr[0];
-				llTemp ^= pPair->m_V.CltLast.Addr.ullAddr[1];
-				DEV_INFO(TF("[登陆服务器]加密Key前后为[%llx-%llx-%llx+%llx]"), pPair->m_K, llTemp, pPair->m_V.CltLast.Addr.ullAddr[0], pPair->m_V.CltLast.Addr.ullAddr[1]);
+			if (pPair->m_V.CltAddr.usAttr & ATTR_IPV6) {
+				llTemp ^= pPair->m_V.CltAddr.Addr.ullAddr[0];
+				llTemp ^= pPair->m_V.CltAddr.Addr.ullAddr[1];
+				DEV_INFO(TF("[登陆服务器]加密Key前后为[%llx-%llx-%llx+%llx]"), pPair->m_K, llTemp, pPair->m_V.CltAddr.Addr.ullAddr[0], pPair->m_V.CltAddr.Addr.ullAddr[1]);
 			}
 			else {
-				llTemp ^= pPair->m_V.CltLast.Addr.uAddr[0];
-				DEV_INFO(TF("[登陆服务器]加密Key前后为[%llx-%llx-%x]"), pPair->m_K, llTemp, pPair->m_V.CltLast.Addr.uAddr[0]);
+				llTemp ^= pPair->m_V.CltAddr.Addr.uAddr[0];
+				DEV_INFO(TF("[登陆服务器]加密Key前后为[%llx-%llx-%x]"), pPair->m_K, llTemp, pPair->m_V.CltAddr.Addr.uAddr[0]);
 			}
 			/////////////////////////////////////////////////////////////////
-			(static_cast<CPAKLoginSelectGame*>(pAck))->SetAuthCode(llTemp);
-			m_NetworkPtr->Send((KeyRef)pPair->m_K, (*pAck));
+			CPAKLoginSelectGame* pSelect = static_cast<CPAKLoginSelectGame*>(pAck);
+			pPair->m_V.nGameId = (Int)pSelect->GetAuthCode();
+
+			pSelect->SetAuthCode(llTemp);
+			m_NetworkPtr->Send((KeyRef)pPair->m_K, (*pSelect));
 		}
 		else {
 			pPair->m_V.nStatus = SESSION_DATA::SESSION_STATUS_LINKACK;
@@ -1330,7 +1333,7 @@ void CLoginServer::SelectGameAck(CPAKSessionAck* pAck)
 		LOGV_WARN(m_FileLog, TF("[登陆服务器]游戏服务器处理的选择请求返回时无法查找到SessionId[%llx]数据或者Session状态不匹配"), pAck->GetSessionId());
 	}
 }
-// 登录游戏服务器回复包
+
 void CLoginServer::LinkGameAck(CPAKLoginLinkGame* pLink)
 {
 	DEV_INFO(TF("[登陆服务器]收到%d服务器的登陆1校验回复包%d[%llx-%llx]"), pLink->GetType(), pLink->GetAck(), pLink->GetSessionId(), pLink->GetAuthCode());
@@ -1349,7 +1352,7 @@ void CLoginServer::LinkGameAck(CPAKLoginLinkGame* pLink)
 		LOGV_WARN(m_FileLog, TF("[登陆服务器]游戏服务器处理的登陆请求返回时无法查找到SessionId[%llx]数据或者Session状态不匹配"), pLink->GetSessionId());
 	}
 }
-// 用户进入/退出游戏排队或者游戏世界
+
 void CLoginServer::PlayGameAck(CPAKSessionAck* pAck)
 {
 	DEV_INFO(TF("[登陆服务器]收到%d服务器的进入游戏回复包%d[%llx]"), pAck->GetType(), pAck->GetAck(), pAck->GetSessionId());

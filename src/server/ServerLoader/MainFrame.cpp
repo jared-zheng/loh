@@ -5,7 +5,7 @@
 //   Source File : MainFrame.cpp                                //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
+//   Update : 2015-11-25     version 0.0.0.5                    //
 //   Detail : 服务加载器主界面                                   //
 //                                                              //
 //////////////////////////////////////////////////////////////////
@@ -19,6 +19,7 @@
 #include "GameDBDlg.h"
 #include "GameDlg.h"
 #include "GateDlg.h"
+#include "ZoneDlg.h"
 #include "MainFrame.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +103,7 @@ LRESULT CMainFrame::OnCreate(LPCREATESTRUCT)
 	m_StatusBar.SetText(2, *strTemp);
 	// static controls
 	cpm.itMenuID = IDC_SERVERTAB;
-	cpm.ulStyle  = WS_CHILD|WS_BORDER|WS_VISIBLE|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|TCS_HOTTRACK|TCS_MULTILINE;
+	cpm.ulStyle  = WS_CHILD|WS_BORDER|WS_VISIBLE|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|TCS_HOTTRACK;
 	if (GServerLoaderInst->m_UIManagerPtr->Create(m_Servers, cpm) == -1) {
 		return -1;
 	}
@@ -266,6 +267,7 @@ void CMainFrame::OnStart(void)
 {
 	if (LoadServerDlgs() == false) {
 		DEV_ERROR(TF("创建服务器界面对话框失败!"));
+		UnloadServerDlgs();
 		GServerLoaderInst->StopServers();
 		GServerLoaderInst->UnloadServers();
 		return;
@@ -332,6 +334,7 @@ void CMainFrame::OnStart(void)
 		FrameLayout();
 	}
 	else {
+		UnloadServerDlgs();
 		GServerLoaderInst->StopServers();
 		GServerLoaderInst->UnloadServers();
 	}
@@ -478,6 +481,11 @@ bool CMainFrame::CreateServerDlg(Int nIndex)
 		case DATA_INDEX_GAME:
 			{
 				m_pServerDlg[nIndex] = MNEW CGameDlg;
+			}
+			break;
+		case DATA_INDEX_ZONE:
+			{
+				m_pServerDlg[nIndex] = MNEW CZoneDlg;
 			}
 			break;
 		case DATA_INDEX_GATE:

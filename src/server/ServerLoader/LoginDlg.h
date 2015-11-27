@@ -5,8 +5,8 @@
 //   Header File : LoginDlg.h                                   //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
-//   Detail : 登陆服务器管理界面对话框                            //
+//   Update : 2015-11-25     version 0.0.0.5                    //
+//   Detail : 登陆服务器界面对话框                               //
 //                                                              //
 //////////////////////////////////////////////////////////////////
 
@@ -18,7 +18,7 @@
 #include "CommonDlg.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CLoginDlg
+/// 登陆服务器界面对话框 
 class CLoginDlg : public CCommonDlg
 {
 public:
@@ -48,12 +48,12 @@ private:
 
 	virtual CXListView* GetListView(Int nServerIndex) OVERRIDE;
 private:
-	UInt                   m_uLoginOnline; // 登陆服务器连接客户端当前在线数量
-	UInt                   m_uLoginAll;    // 登陆服务器连接客户端总数量
-	UInt                   m_uLoginBusy;   // 登陆服务器繁忙程度
-	UInt                   m_uGameCount;   // 连接的游戏服务器数量
-	UInt                   m_uGameOnline;  // 游戏服务器连接地图&网关服务器当前在线数量
-	UInt                   m_uGameAll;     // 游戏服务器连接地图&网关服务器总数量
+	UInt                   m_uLoginOnline; 
+	UInt                   m_uLoginAll;    
+	UInt                   m_uLoginBusy;   
+	UInt                   m_uGameCount;   
+	UInt                   m_uGameOnline;  
+	UInt                   m_uGameAll;     
 	CXStatic               m_ConnectCenter;
 	CXStatic               m_ConnectLoginDB;
 	CXStatic               m_TCPService;

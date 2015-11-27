@@ -5,15 +5,14 @@
 //   Source File : GameDlg.cpp                                  //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
-//   Detail : 游戏服务器管理界面对话框                            //
+//   Update : 2015-11-25     version 0.0.0.5                    //
+//   Detail : 游戏服务器界面对话框                               //
 //                                                              //
 //////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "resource.h"
 #include "network.h"
-#include "servermap.h"
 #include "ServerLoader.h"
 #include "GameDlg.h"
 
@@ -113,7 +112,8 @@ void CGameDlg::OnLive(bool bStart)
 
 		strTemp.Load(IDC_PING_SERVICE);
 		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_GAME, 0, strAddr, usPort);
-		m_PingService.SetWindowText(*strAddr);
+		strTemp += strAddr;
+		m_PingService.SetWindowText(*strTemp);
 
 		strTemp.Load(IDC_LISTEN_ZONE);
 		GServerLoaderInst->m_Config.GetServerAddr(CServerConfig::CFG_DEFAULT_GAME, CServerConfig::CFG_DEFAULT_ZONE, strAddr, usPort);

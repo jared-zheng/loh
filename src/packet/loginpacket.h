@@ -5,7 +5,7 @@
 //   Header File : loginpacket.h                                //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
+//   Update : 2015-11-25     version 0.0.0.5                    //
 //   Detail : 登陆服务器信令                                     //
 //                                                              //
 //////////////////////////////////////////////////////////////////
@@ -21,7 +21,7 @@
 // 
 enum LOGIN_ERROR
 {
-	LOGIN_ERROR_SESSION = (DATAD_FAIL + 1),   // session错误或者状态错误
+	LOGIN_ERROR_SESSION = (DATAD_FAIL + 1),   // 会话错误或者状态错误
 	LOGIN_ERROR_ACK_TIMEOUT,                  // 请求超时
 
 	LOGIN_ERROR_LINK_ID,
@@ -29,15 +29,15 @@ enum LOGIN_ERROR
 
 	LOGIN_ERROR_LINK_LIMIT,                   // 登陆验证超过最多次数, 一段时间内不能再登陆
 	LOGIN_ERROR_SELECT_LIMIT,                 // 切换游戏服务器超过最多次数, 一段时间内不能再登陆
-	LOGIN_ERROR_LINK_IDLE,                    // 登陆以后未进行任何操作, 登陆服务器自动关闭连接
-	LOGIN_ERROR_GAME_PLAY,                    // 排队或者游戏中特定时间没有退出, 登陆服务器自动关闭连接
+	LOGIN_ERROR_LINK_IDLE,                    // 登陆以后未进行任何操作, 登陆服务器自动断开客户端
+	LOGIN_ERROR_GAME_PLAY,                    // 排队或者游戏中特定时间没有退出, 登陆服务器自动断开客户端
 	LOGIN_ERROR_GAME_INDEX,                   // 游戏服务器索引号错误
 	LOGIN_ERROR_NONE_GATE,                    // 没有网关服务器
 	LOGIN_ERROR_QUEUE_LIMIT,                  // 游戏服务器排队队列已经满, 到达人数上限
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-// login信令定义
+// 登陆服务器信令定义
 enum PAK_EVENT_LOGIN
 {
 	PAK_EVENT_LOGIN_LINK = (PAK_EVENT_LOGIN_BEGIN + 1), // CPAKLoginLink
@@ -48,13 +48,13 @@ enum PAK_EVENT_LOGIN
 
 	PAK_EVENT_LOGIN_SELECT_GAME, // 选择游戏服务器, CPAKLoginSelectGame or CPAKAck(error)
 
-	PAK_EVENT_LOGIN_LINK_GAME,   // 连接游戏服务器, CPAKLoginLinkGame or CPAKAck(error)
+	PAK_EVENT_LOGIN_LINK_GAME,   // 游戏服务器验证客户端有效性, CPAKLoginLinkGame or CPAKAck(error)
 
 	PAK_EVENT_LOGIN_QUEUE_PLAY,  // 排队或者进入游戏, CPAKSessionAck<PAK_EVENT_LOGIN_QUEUE_PLAY, PAK_TYPE_GATE>, ack=0加入, 1-退出
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CPAKLoginLink : 账号登陆, session-id=0
+/// 账号登陆, session-id=0
 class CPAKLoginLink : public CPAKSession
 {
 public:
@@ -80,7 +80,7 @@ private:
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CPAKLoginLinkAck : 账号登陆Ack
+/// 账号登陆Ack
 class CPAKLoginLinkAck : public CPAKSessionAck
 {
 public:
@@ -109,15 +109,15 @@ public:
 	CNETTraits::NET_ADDR&  GetCltLast(void);
 	void                   SetCltLast(CNETTraits::NET_ADDR& CltLast);
 private:
-	LLong                  m_llUserId;
-	LLong                  m_llTime;     // last-client login time
-	CStream*               m_pStream;
-	Int                    m_nGameId;    // last game server id
-	CNETTraits::NET_ADDR   m_Addr;       // last-client addr[ipv4 or ipv6]
+	LLong                  m_llUserId;   ///< 用户Id
+	LLong                  m_llTime;     ///< 最近一次登陆的时间
+	CStream*               m_pStream;    ///< 本地流对象, 网络传输序列化时忽略大小
+	Int                    m_nGameId;    ///< 最近一次连接游戏服务器Id
+	CNETTraits::NET_ADDR   m_Addr;       ///< 最近一次登陆的客户端地址
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CPAKLoginUnlink : 账号登出
+/// 账号登出
 class CPAKLoginUnlink : public CPAKSession
 {
 public:
@@ -142,14 +142,14 @@ public:
 	CNETTraits::NET_ADDR&  GetCltLast(void);
 	void                   SetCltLast(CNETTraits::NET_ADDR& CltLast);
 private:
-	LLong                  m_llUserId;
-	LLong                  m_llTime;
-	Int                    m_nGameId;  // last game server id
-	CNETTraits::NET_ADDR   m_Addr;     // last-client, last-server[ipv4 or ipv6]
+	LLong                  m_llUserId; ///< 用户Id
+	LLong                  m_llTime;   ///< 本次登陆成功的时间(由登陆服务器填写)
+	Int                    m_nGameId;  ///< 本次登陆以后连接的游戏服务器Id
+	CNETTraits::NET_ADDR   m_Addr;     ///< 本次登陆客户端地址
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CPAKLoginSelectGame : 选择游戏服务器
+/// 选择游戏服务器
 class CPAKLoginSelectGame : public CPAKSessionAck
 {
 public:
@@ -168,12 +168,12 @@ public:
 	CNETTraits::NET_ADDR&  GetAddr(void);
 	void                   SetAddr(CNETTraits::NET_ADDR& Addr);
 private:
-	LLong                  m_llAuthCode;  // 客户端使用游戏DataRef(索引值)请求登陆游戏服务器, 登陆服务器经过游戏服务器验证以后返回验证码1
-	CNETTraits::NET_ADDR   m_Addr;        // [ipv4 or ipv6]
+	LLong                  m_llAuthCode;  ///< 客户端使用游戏对象索引值请求连接游戏服务器, 成功返回验证码1
+	CNETTraits::NET_ADDR   m_Addr;        ///< 各自服务器地址 : 登录服务器填写自己的UDP地址, 应答的网关服务器填写自己的UDP地址
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CPAKLoginLinkGame : 验证游戏服务器
+/// 游戏服务器验证客户端是否合法连接
 class CPAKLoginLinkGame : public CPAKSessionAck
 {
 public:
@@ -189,8 +189,9 @@ public:
 	LLong          GetAuthCode(void);
 	void           SetAuthCode(LLong llAuthCode);
 private:
-	// 1. session-id=0, authcode=(selectgame's m_llAuthCode); 2. session-id=user-id, authcode=(1 ret m_llAuthCode)
-	// 3. ack=okay, ret session-id(暂时保留为user-id) & m_llAuthCode is queue number(0 --> into game)
+	///< 1. 第一次Session为空, 验证码为前面登陆服务器返回的验证码1
+	///< 2. 第一次验证通过, 游戏服务器将验证码2通过客户端连接的登陆服务器返回, 第二次验证Session=用户Id, 验证码为返回的验证码2
+	///< 3. 第二次验证通过  游戏服务器返回的AuthCode是客户端在此游戏服务器的排队序号, 序号为0表示直接可以进入游戏(和游戏服务器通信的Session暂时为用户Id)
 	LLong         m_llAuthCode;  
 };
 

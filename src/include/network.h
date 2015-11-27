@@ -220,7 +220,8 @@ public:
 			{
 				if ((t1.usAttr == t2.usAttr) && (t1.usPort == t2.usPort))
 				{
-					return (MM_SAFE::Memcmp(t1.Addr.bAddr, t2.Addr.bAddr, LEN_BYTE) == 0);
+					return ((t1.Addr.ullAddr[1] == t2.Addr.ullAddr[1]) &&
+							(t1.Addr.ullAddr[0] == t2.Addr.ullAddr[0]));
 				}
 				return false;
 			}
@@ -231,7 +232,8 @@ public:
 				{
 					if (t1.usPort == t2.usPort)
 					{
-						return MM_SAFE::Memcmp(t1.Addr.bAddr, t2.Addr.bAddr, LEN_BYTE);
+						return ((t1.Addr.ullAddr[1] == t2.Addr.ullAddr[1]) &&
+								(t1.Addr.ullAddr[0] == t2.Addr.ullAddr[0]));
 					}
 					return (Int)(t1.usPort - t2.usPort);
 				}
@@ -353,11 +355,10 @@ public:
 	//         SOCKET_UDP_BROADCAST - UDP get TRUE if broadcast
 	virtual LLong  GetAttr(KeyRef krSocket, Int nFlag = SOCKET_LIVEDATA) PURE_METHOD;
 	virtual bool   SetAttr(KeyRef krSocket, LLong llData, Int nAttr = SOCKET_LIVEDATA) PURE_METHOD;
-	// ***recommend use this***, pData from TCP_PARAM.pData or UDP_PARAM.pData
-	// CStream::STREAMM_WRITE or CStream::STREAMM_READ
-	virtual bool   AllocBuffer(CStreamScopePtr& StreamScopePtrRef, PByte pData = nullptr) PURE_METHOD;
-	virtual bool   AllocJumboBuffer(CStreamScopePtr& StreamScopePtrRef, PByte pData = nullptr) PURE_METHOD;
-
+	// ***recommend use this***, pCache from TCP_PARAM.pCache or UDP_PARAM.pCache
+	virtual bool   AllocBuffer(CStreamScopePtr& StreamScopePtrRef, PByte pCache = nullptr) PURE_METHOD;
+	virtual bool   AllocJumboBuffer(CStreamScopePtr& StreamScopePtrRef, PByte pCache = nullptr) PURE_METHOD;
+	// CStream's Refer
 	virtual bool   ReferBuffer(CStreamScopePtr& StreamScopePtrRef, CStream& StreamSrc) PURE_METHOD;
 
 	virtual void   Dump(NET_DUMP& Dump) PURE_METHOD;

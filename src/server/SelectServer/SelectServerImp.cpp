@@ -5,8 +5,8 @@
 //   Source File : SelectServerImp.cpp                          //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
-//   Detail : 选择服务器管理实现                                 //
+//   Update : 2015-11-25     version 0.0.0.5                    //
+//   Detail : 选择服务器实现                                     //
 //                                                              //
 //////////////////////////////////////////////////////////////////
 
@@ -48,11 +48,11 @@ UInt CSelectServer::Init(CEventHandler& EventHandlerRef)
 	}
 	return (UInt)RET_FAIL;
 }
-// 获取共享的配置对象和网络对象
+
 bool CSelectServer::InitLoadShare(void)
 {
 	assert(m_pConfig == nullptr);
-	m_pUIHandler->OnHandle(CServerConfig::CFG_DEFAULT_CONFIG, reinterpret_cast<uintptr_t>(&m_pConfig), DATA_INDEX_SELECT);
+	m_pUIHandler->OnHandle(CServerConfig::CFG_CONFIG_PTR, reinterpret_cast<uintptr_t>(&m_pConfig), DATA_INDEX_SELECT);
 	if (m_pConfig == nullptr) {
 		LOG_ERROR(m_FileLog, TF("[选择服务器]从同进程共享数据回调接口获取配置对象指针无效"));
 		return false;
@@ -72,7 +72,7 @@ bool CSelectServer::InitLoadShare(void)
 	m_NetworkPtr = *(reinterpret_cast<CNetworkPtr*>(xValue.pValue));
 	return true;
 }
-// 初始化配置
+
 bool CSelectServer::InitLoadConfig(void)
 {
 	assert(m_krConnectCenter == nullptr);
@@ -91,7 +91,7 @@ bool CSelectServer::InitLoadConfig(void)
 	UShort     usPort = 0;
 	CStringKey strAddr;
 	m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_SELECT, 0, strAddr, usPort);
-	m_NetworkPtr->TranslateAddr(strAddr, usPort, m_ServerInfo.NetAddr[SELECTI_UDP]); // client udp
+	m_NetworkPtr->TranslateAddr(strAddr, usPort, m_ServerInfo.NetAddr[SELECTI_UDP]);
 	return true;
 }
 //--------------------------------------
@@ -108,7 +108,7 @@ void CSelectServer::Exit(void)
 		LOG_INFO(m_FileLog, TF("[选择服务器]选择服务退出处理完成!"));
 	}
 }
-// 清除共享的配置对象和网络对象
+
 void CSelectServer::ExitUnloadShare(void)
 {
 	m_pConfig    = nullptr;
@@ -140,7 +140,7 @@ bool CSelectServer::Start(void)
 	}
 	return true;
 }
-// 运行创建连接中心服务器的连接对象
+
 bool CSelectServer::StartConnectCenterServer(void)
 {
 	// 选择和中心在不同进程,  需要连接内网中心服务器
@@ -152,8 +152,8 @@ bool CSelectServer::StartConnectCenterServer(void)
 			m_krConnectCenter = m_NetworkPtr->Create(*this, usPort, *strAddr);
 		}
 		if (m_krConnectCenter != nullptr) {
+			LOG_INFO(m_FileLog, TF("[选择服务器]选择服务器和中心服务器在不同进程, 创建连接中心服务器对象成功"));
 			if (m_bCenterCnnted == false) {
-				LOG_INFO(m_FileLog, TF("[选择服务器]选择服务器和中心服务器在不同进程, 创建连接中心服务器Socket成功"));
 				UShort     usPort = 0;
 				CStringKey strAddr;
 				m_pConfig->GetServerAddr(CServerConfig::CFG_DEFAULT_CENTER, CServerConfig::CFG_DEFAULT_SELECT, strAddr, usPort);
@@ -165,7 +165,7 @@ bool CSelectServer::StartConnectCenterServer(void)
 			}
 		}
 		else {
-			LOG_ERROR(m_FileLog, TF("[选择服务器]选择服务器和中心服务器在不同进程, 创建连接中心服务器Socket失败"));
+			LOG_ERROR(m_FileLog, TF("[选择服务器]选择服务器和中心服务器在不同进程, 创建连接中心服务器对象失败"));
 			return false;
 		}
 	}
@@ -180,7 +180,7 @@ bool CSelectServer::StartConnectCenterServer(void)
 		m_pShareCenterSvr = reinterpret_cast<ICommonServer*>(xValue.pValue);
 		m_bCenterCnnted   = true;
 
-		LOG_INFO(m_FileLog, TF("[选择服务器]同进程直接连接中心服务器"));
+		LOG_INFO(m_FileLog, TF("[选择服务器]同进程直接向中心服务器注册"));
 		m_ServerInfo.usStatus = STATUSU_LINK;
 
 		CSelectLink Link;
@@ -196,7 +196,7 @@ bool CSelectServer::StartConnectCenterServer(void)
 	}
 	return true;
 }
-// 运行创建UDP监听客户端选择空闲登陆服务器的连接对象
+
 bool CSelectServer::StartUDPService(void)
 {
 	// 开外网UDP, 用于客户端UDP请求登陆服务器地址
@@ -245,25 +245,25 @@ void CSelectServer::Stop(void)
 		LOG_INFO(m_FileLog, TF("[选择服务器]选择服务停止完成!"));
 	}
 }
-// 停止连接中心服务器
+
 void CSelectServer::StopConnectCenterServer(void)
 {
 	if (m_krConnectCenter != nullptr) {
 		m_NetworkPtr->Destroy(m_krConnectCenter, false);
 		m_krConnectCenter = nullptr;
-		LOG_INFO(m_FileLog, TF("[选择服务器]销毁连接中心服务器的连接成功"));
+		LOG_INFO(m_FileLog, TF("[选择服务器]销毁连接中心服务器对象成功"));
 	}
 	m_bCenterCnnted   = false;
 	m_bCenterLinked   = false;
 	m_pShareCenterSvr = nullptr;
 }
-// 停止UDP监听客户端连接
+
 void CSelectServer::StopUDPService(void)
 {
 	if (m_krUDPService != nullptr) {
 		m_NetworkPtr->Destroy(m_krUDPService, false);
 		m_krUDPService = nullptr;
-		LOG_INFO(m_FileLog, TF("[选择服务器]销毁UDP服务的连接成功"));
+		LOG_INFO(m_FileLog, TF("[选择服务器]销毁UDP服务对象成功"));
 	}
 }
 //--------------------------------------
@@ -271,7 +271,7 @@ bool CSelectServer::OnShareRoutine(Int nEvent, CStream& Stream, LLong)
 {
 	assert((m_pConfig->GetLoadServers() & CServerConfig::CFG_DEFAULT_CENTER) != 0);
 	if (nEvent == PAK_EVENT_SYNC) {
-		LOGV_INFO(m_FileLog, TF("[选择服务器]同进程同步登录服务器信息"));
+		LOGV_INFO(m_FileLog, TF("[选择服务器]同进程中心服务器同步登录服务器信息"));
 		CStreamScopePtr StreamPtr;
 		if (m_NetworkPtr->ReferBuffer(StreamPtr, Stream)) { // 同进程的Stream是写模式, 创建一个读模式的引用
 			CPAKSync Sync;
@@ -281,7 +281,7 @@ bool CSelectServer::OnShareRoutine(Int nEvent, CStream& Stream, LLong)
 			SyncLoginSortInfo(*StreamPtr);
 		}
 		else {
-			LOGV_WARN(m_FileLog, TF("[选择服务器]同进程同步登录服务器信息错误"));
+			LOGV_WARN(m_FileLog, TF("[选择服务器]同进程中心服务器同步登录服务器信息创建读引用错误"));
 		}
 	}
 	else {
@@ -307,7 +307,7 @@ bool CSelectServer::OnTcpDispatch(const PacketPtr& PktPtr, PTCP_PARAM pTcp)
 			NET_ADDR NetAddr;
 			m_NetworkPtr->GetAddr(pTcp->krSocket, NetAddr, false);
 			m_pUIHandler->OnHandle(PAK_EVENT_LINK, reinterpret_cast<uintptr_t>(&NetAddr), DATA_INDEX_CENTER);
-			LOG_INFO(m_FileLog, TF("[选择服务器]收到中心服务器连接回复包"));
+			LOG_INFO(m_FileLog, TF("[选择服务器]收到中心服务器注册回复包"));
 		}
 		break;
 	case PAK_EVENT_UPDATEACK:
@@ -333,7 +333,7 @@ bool CSelectServer::OnTcpDispatch(const PacketPtr& PktPtr, PTCP_PARAM pTcp)
 	case PAK_EVENT_UNLINKACK:
 		{
 			m_bCenterLinked = false;
-			LOG_INFO(m_FileLog, TF("[选择服务器]收到中心服务器断接回复包"));
+			LOG_INFO(m_FileLog, TF("[选择服务器]收到中心服务器注销回复包"));
 		}
 		break;
 	case PAK_EVENT_LIVEACK:
@@ -342,7 +342,7 @@ bool CSelectServer::OnTcpDispatch(const PacketPtr& PktPtr, PTCP_PARAM pTcp)
 		break;
 	default:
 		{
-			LOGV_WARN(m_FileLog, TF("[选择服务器]%p连接信息无法识别的中心服务器信令包数据[event=%d]"), pTcp->krSocket, PktPtr->GetEvent());
+			LOGV_WARN(m_FileLog, TF("[选择服务器]%p无法识别的中心服务器信令包数据[event=%d]"), pTcp->krSocket, PktPtr->GetEvent());
 		}
 	}
 	return true;
@@ -357,7 +357,7 @@ bool CSelectServer::OnUdpDispatch(const PacketPtr& PktPtr, PUDP_PARAM pUdp)
 	bool bRet = false;
 	if ((PktPtr->GetType() == PAK_TYPE_CLIENT_READY) && (PktPtr->GetEvent() == PAK_EVENT_SELECT_LOGIN)) {
 		m_ServerInfo.Incr();
-		// 1. 判断IP是否在黑名单
+		// 1. 检测IP是否在黑名单
 		if (CheckAddrBlacklist(pUdp->NetAddr) == false) {
 			// TODO!!! 客户端可以通过DNS智能解析连接同网络的选择服务器
 			CPAKSelectLoginAck SelectLoginAck;
@@ -414,7 +414,7 @@ bool CSelectServer::OnTcpConnect(UInt uError, KeyRef krConnect)
 	}
 	return true;
 }
-// 连接中心服务器
+
 void CSelectServer::LinkCenterServer(void)
 {
 	if (m_bCenterCnnted && (m_bCenterLinked == false)) {
@@ -433,12 +433,12 @@ void CSelectServer::LinkCenterServer(void)
 			m_NetworkPtr->Send(m_krConnectCenter, *StreamPtr);
 		}
 		else {
-			DEV_WARN(TF("[选择服务器]连接中心服务器创建网络数据流异常!"));
-			LOG_WARN(m_FileLog, TF("[选择服务器]连接中心服务器创建网络数据流异常!"));
+			DEV_WARN(TF("[选择服务器]向中心服务器注册时创建网络数据流异常!"));
+			LOG_WARN(m_FileLog, TF("[选择服务器]向中心服务器注册时创建网络数据流异常!"));
 		}
 	}
 }
-// 断连中心服务器
+
 void CSelectServer::UnlinkCenterServer(void)
 {
 	if (m_bCenterCnnted && m_bCenterLinked) {
@@ -455,7 +455,8 @@ bool CSelectServer::OnTcpClose(KeyRef krSocket, LLong)
 		m_krConnectCenter = nullptr;
 		m_bCenterCnnted   = false;
 		m_bCenterLinked   = false;
-		DEV_INFO(TF("[选择服务器]连接中心服务器连接断连/断开"));
+		DEV_INFO(TF("[选择服务器]连接中心服务器对象断开"));
+		LOG_INFO(m_FileLog, TF("[选择服务器]连接中心服务器对象断开"));
 
 		m_SortChain.Reset();
 		{ CSyncLockWaitScope scope(m_LoginSvrMap.GetLock()); m_LoginSvrMap.RemoveAll(); }
@@ -473,7 +474,6 @@ bool CSelectServer::OnUdpClose(KeyRef krSocket, LLong)
 	return true;
 }
 //--------------------------------------
-// 定时检测监听中心服务器连接的连接对象是否有效
 bool CSelectServer::CheckConnectCenterServer(void)
 {
 	if (m_bCenterCnnted == false) {
@@ -486,7 +486,7 @@ bool CSelectServer::CheckConnectCenterServer(void)
 	}
 	return true;
 }
-// 定时检测UDP监听客户端的连接对象是否有效
+
 bool CSelectServer::CheckUDPService(void)
 {
 	if (m_krUDPService == nullptr) {
@@ -494,7 +494,7 @@ bool CSelectServer::CheckUDPService(void)
 	}
 	return true;
 }
-// 同步服务器信息给界面
+
 bool CSelectServer::SyncServerInfo(void)
 {
 	if (m_ServerInfo.usStatus == STATUSU_SYNC) {
@@ -517,7 +517,7 @@ bool CSelectServer::SyncServerInfo(void)
 	}
 	return true;
 }
-// 同步登陆服务器负载情况数组
+
 bool CSelectServer::SyncLoginSortInfo(CStream& Stream)
 {
 	LLong llPos = (LLong)Stream.Tell();
@@ -554,8 +554,8 @@ bool CSelectServer::SyncLoginSortInfo(CStream& Stream)
 	}
 	pSortResult->lCount = (Long)nCount;
 	pSortResult->lIndex = 0;
-	m_SortChain.Swap(); // 交换登陆排序的数据, 将当前更新的作为有效数据
-	LOGV_INFO(m_FileLog, TF("[选择服务器]更新登陆服务器负载情况数组有%d个登陆服务器信息"), nCount);
+	m_SortChain.Swap();
+	LOGV_INFO(m_FileLog, TF("[选择服务器]更新登陆服务器负载数组有%d个登陆服务器信息"), nCount);
 	return (nCount > 0);
 }
 

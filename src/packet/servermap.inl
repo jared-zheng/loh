@@ -5,7 +5,7 @@
 //   Inline File : servermap.inl                                //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
+//   Update : 2015-11-25     version 0.0.0.5                    //
 //   Detail : 信息数据存储                                      //
 //                                                              //
 //////////////////////////////////////////////////////////////////
@@ -55,15 +55,15 @@ INLINE void tagSERVER_INFO::Copy(const tagSERVER_DATA& sd)
 		usStatus  = STATUSU_SYNC;
 	}
 }
-// 统计同类型服务器的客户端总连接数&在线数在一台服务器连接的增加情况
+
 INLINE void tagSERVER_INFO::Incr(const tagSERVER_DATA& sd)
 {
 	uAllCount += sd.uAllCount;
 	uOnline   += sd.uOnline;
-	++usBusy; // 表示同类型服务器数量
+	++usBusy; // 表示同类型服务器数量增加
 	usStatus = STATUSU_SYNC;
 }
-// 统计同类型服务器的客户端总连接数&在线数新数据sdIncr和旧数据sdDecr的差值
+
 INLINE void tagSERVER_INFO::Diff(const tagSERVER_DATA& sdIncr, const tagSERVER_DATA& sdDecr)
 {
 	uAllCount += sdIncr.uAllCount;
@@ -82,7 +82,7 @@ INLINE void tagSERVER_INFO::Diff(const tagSERVER_DATA& sdIncr, const tagSERVER_D
 	}
 	usStatus = STATUSU_SYNC;
 }
-// 统计同类型服务器的客户端总连接数&在线数在一台服务器断开的减少情况
+
 INLINE void tagSERVER_INFO::Decr(const tagSERVER_DATA& sd)
 {
 	if (uAllCount > sd.uAllCount) {
@@ -98,11 +98,11 @@ INLINE void tagSERVER_INFO::Decr(const tagSERVER_DATA& sd)
 		uOnline = 0;
 	}
 	if (usBusy > 0) {
-		--usBusy; // 表示同类型服务器数量
+		--usBusy; // 表示同类型服务器数量减少
 	}
 	usStatus = STATUSU_SYNC;
 }
-// 服务器客户端连接增加统计人数
+
 INLINE void tagSERVER_INFO::Incr(void)
 {
 	++uAllCount;
@@ -114,7 +114,7 @@ INLINE void tagSERVER_INFO::Incr(void)
 	}
 	usStatus = STATUSU_SYNC;
 }
-// 服务器客户端断开减少统计人数
+
 INLINE void tagSERVER_INFO::Decr(void)
 {
 	if (uOnline > 0) {
@@ -189,7 +189,7 @@ INLINE void tagSERVER_ADDR<stLen>::Addr(CStream& Stream, Int nStatus)
 			Stream.Write(NetAddr, sizeof(NetAddr));
 		}
 	}
-	else {// gameserver only STATUSU_PING
+	else { // 登陆服务器将游戏服务器信息发送给客户端增加STATUSU_PING, 只发送PING服务器地址
 		if (Stream.IsRead()) {
 			Stream.Read(NetAddr, sizeof(CNETTraits::NET_ADDR));
 		}
@@ -206,7 +206,6 @@ INLINE tagZONE_ADDR_INDEX::tagZONE_ADDR_INDEX(void)
 
 INLINE tagZONE_ADDR_INDEX::~tagZONE_ADDR_INDEX(void)
 {
-	assert(Index.GetSize() == 0);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // tagSERVER_MAP : 服务器信息映射表结构定义

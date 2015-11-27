@@ -62,8 +62,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2013,10,25,1
- PRODUCTVERSION 1,0,0,2
+FILEVERSION 2015,11,25,1
+ PRODUCTVERSION 0,0,0,5
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -80,12 +80,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "LH Studio"
             VALUE "FileDescription", "ZoneServer.dll"
-            VALUE "FileVersion", "2013,10,25,01"
+            VALUE "FileVersion", "2015,11,25,01"
             VALUE "InternalName", "ZoneServer.dll"
             VALUE "LegalCopyright", "Copyright(C) LH Studio. All Rights Reserved"
             VALUE "OriginalFilename", "ZoneServer.dll"
             VALUE "ProductName", "ZoneServer.dll"
-            VALUE "ProductVersion", "1, 0, 0, 2"
+            VALUE "ProductVersion", "0, 0, 0, 5"
         END
     END
     BLOCK "VarFileInfo"

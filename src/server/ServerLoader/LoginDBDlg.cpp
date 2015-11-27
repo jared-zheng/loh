@@ -5,14 +5,13 @@
 //   Source File : LoginDBDlg.cpp                               //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
-//   Detail : 登陆DB服务器管理界面对话框                          //
+//   Update : 2015-11-25     version 0.0.0.5                    //
+//   Detail : 登陆DB服务器界面对话框                             //
 //                                                              //
 //////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "resource.h"
-#include "servermap.h"
 #include "ServerLoader.h"
 #include "LoginDBDlg.h"
 

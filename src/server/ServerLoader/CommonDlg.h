@@ -5,8 +5,8 @@
 //   Header File : CommonDlg.h                                  //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
-//   Detail : 服务器管理界面TAB子对话框基类                       //
+//   Update : 2015-11-25     version 0.0.0.5                    //
+//   Detail : 服务器界面TAB子对话框基类                           //
 //                                                              //
 //////////////////////////////////////////////////////////////////
 
@@ -19,7 +19,7 @@
 #include "xuikit.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CCommonDlg
+/// 服务器界面TAB子对话框基类
 class ICommonServer;
 class CCommonDlg : public CXDlg, public CEventHandler
 {

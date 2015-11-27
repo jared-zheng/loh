@@ -5,7 +5,7 @@
 //   Header File : GameDBRoutine.h                              //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
+//   Update : 2015-11-25     version 0.0.0.5                    //
 //   Detail : 游戏DB服务器事务实现                               //
 //                                                              //
 //////////////////////////////////////////////////////////////////
@@ -18,7 +18,9 @@
 #include "CommonRoutine.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CGameDBRoutine
+/// 游戏DB服务器事务实现
+/// - 从服务器扩展配置文件中读取数据库信息
+/// - 角色的时间点数需要用户在网站充入游戏服务器
 class CGameDBRoutine : public ICommonRoutine
 {
 	DECLARE_RTTI_CREATE( CGameDBRoutine )
@@ -40,11 +42,9 @@ public:
 	virtual bool Add(Int nEvent, CEventBase& EventRef, LLong llParam = 0, CEventQueue::EVENT_TYPE eType = CEventQueue::EVENT_TYPE_REFCOUNT) OVERRIDE;
 	virtual bool Add(Int nEvent, CStream& Stream, LLong llParam = 0) OVERRIDE;//
 private:
-	class CGameDBServer*   m_pServer;
-	size_t                 m_stCount;         // 临时的ID号
-	CEventQueuePtr         m_EventQueuePtr;   // 事件队列  
-	// 1. 从服务器扩展配置文件中读取数据库信息
-	// 2. 角色的时间点数需要用户在网站充入游戏服务器
+	class CGameDBServer*   m_pServer;         ///< 事务处理对应的服务器
+	size_t                 m_stCount;         ///< 临时的ID号
+	CEventQueuePtr         m_EventQueuePtr;   ///< 事件队列 
 };
 
 INLINE CGameDBRoutine::CGameDBRoutine(void)

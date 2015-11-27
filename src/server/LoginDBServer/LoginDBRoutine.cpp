@@ -5,7 +5,7 @@
 //   Source File : LoginDBRoutine.cpp                           //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
+//   Update : 2015-11-25     version 0.0.0.5                    //
 //   Detail : 登陆DB服务器事务实现                               //
 //                                                              //
 //////////////////////////////////////////////////////////////////

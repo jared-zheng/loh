@@ -5,8 +5,8 @@
 //   Header File : GameDlg.h                                    //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
-//   Detail : 游戏服务器管理界面对话框                            //
+//   Update : 2015-11-25     version 0.0.0.5                    //
+//   Detail : 游戏服务器界面对话框                               //
 //                                                              //
 //////////////////////////////////////////////////////////////////
 
@@ -18,7 +18,7 @@
 #include "CommonDlg.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CGameDlg
+/// 游戏服务器界面对话框
 class CGameDlg : public CCommonDlg
 {
 public:
@@ -48,15 +48,15 @@ private:
 
 	virtual CXListView* GetListView(Int nServerIndex) OVERRIDE;
 private:
-	UInt                   m_uGameOnline; // 游戏服务器连接地图&网关服务器当前在线数量
-	UInt                   m_uGameAll;    // 游戏服务器连接地图&网关服务器总数量
-	UInt                   m_uGameBusy;   // 游戏服务器繁忙程度
-	UInt                   m_uZoneCount;  // 连接的地图服务器数量
-	UInt                   m_uZoneOnline; // 地图服务器连接客户端当前在线数量
-	UInt                   m_uZoneAll;    // 地图服务器连接客户端总数量
-	UInt                   m_uGateCount;  // 连接的网关服务器数量
-	UInt                   m_uGateOnline; // 网关服务器连接客户端当前在线数量
-	UInt                   m_uGateAll;    // 网关服务器连接客户端总数量
+	UInt                   m_uGameOnline; 
+	UInt                   m_uGameAll;    
+	UInt                   m_uGameBusy;   
+	UInt                   m_uZoneCount;  
+	UInt                   m_uZoneOnline; 
+	UInt                   m_uZoneAll;    
+	UInt                   m_uGateCount;  
+	UInt                   m_uGateOnline; 
+	UInt                   m_uGateAll;    
 	CXStatic               m_ConnectCenter;
 	CXStatic               m_ConnectGameDB;
 	CXStatic               m_PingService;

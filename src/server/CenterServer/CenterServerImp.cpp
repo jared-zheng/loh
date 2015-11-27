@@ -5,8 +5,8 @@
 //   Source File : CenterServerImp.cpp                          //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
-//   Detail : 中心服务器管理实现                                 //
+//   Update : 2015-11-25     version 0.0.0.5                    //
+//   Detail : 中心服务器实现                                     //
 //                                                              //
 //////////////////////////////////////////////////////////////////
 
@@ -47,11 +47,11 @@ UInt CCenterServer::Init(CEventHandler& EventHandlerRef)
 	}
 	return (UInt)RET_FAIL;
 }
-// 获取共享的配置对象和网络对象
+
 bool CCenterServer::InitLoadShare(void)
 {
 	assert(m_pConfig == nullptr);
-	m_pUIHandler->OnHandle(CServerConfig::CFG_DEFAULT_CONFIG, reinterpret_cast<uintptr_t>(&m_pConfig), DATA_INDEX_CENTER);
+	m_pUIHandler->OnHandle(CServerConfig::CFG_CONFIG_PTR, reinterpret_cast<uintptr_t>(&m_pConfig), DATA_INDEX_CENTER);
 	if (m_pConfig == nullptr) {
 		LOG_ERROR(m_FileLog, TF("[中心服务器]从界面回调接口获取配置对象指针无效"));
 		return false;
@@ -74,7 +74,7 @@ bool CCenterServer::InitLoadShare(void)
 	m_pConfig->GetKeyValue()->AddItem(CServerConfig::CenterServer, this);
 	return true;
 }
-// 初始化配置
+
 bool CCenterServer::InitLoadConfig(void)
 {
 	assert(m_krListenSelect == nullptr);
@@ -108,7 +108,7 @@ void CCenterServer::Exit(void)
 		LOG_INFO(m_FileLog, TF("[中心服务器]中心服务退出处理完成!"));
 	}
 }
-// 清除共享的配置对象和网络对象
+
 void CCenterServer::ExitUnloadShare(void)
 {
 	m_pConfig    = nullptr;
@@ -146,7 +146,7 @@ bool CCenterServer::Start(void)
 	}
 	return true;
 }
-// 运行创建监听选择, 登陆和游戏服务器连接的连接对象
+
 bool CCenterServer::StartListenServers(void)
 {
 	UShort     usPort = 0;
@@ -161,7 +161,7 @@ bool CCenterServer::StartListenServers(void)
 		return false;
 	}
 	if (usPort == 0) {
-		m_krListenLogin = (KeyRef)this; // 与select相同监听地址
+		m_krListenLogin = (KeyRef)this;
 		LOG_INFO(m_FileLog, TF("[中心服务器]监听登陆服务器地址和监听选择服务器地址一样"));
 	}
 	else if (StartListenServer(m_krListenLogin, strAddr, usPort) == false) {
@@ -172,7 +172,7 @@ bool CCenterServer::StartListenServers(void)
 		return false;
 	}
 	if (usPort == 0) {
-		m_krListenGame = (KeyRef)this; // 与select或者login相同监听地址
+		m_krListenGame = (KeyRef)this;
 		LOG_INFO(m_FileLog, TF("[中心服务器]监听游戏服务器地址和监听选择服务器或者登陆服务器地址一样"));
 	}
 	else if (StartListenServer(m_krListenGame, strAddr, usPort) == false) {
@@ -180,21 +180,21 @@ bool CCenterServer::StartListenServers(void)
 	}
 	return true;
 }
-// 运行创建监听服务器的连接
+
 bool CCenterServer::StartListenServer(KeyRef& krListen, const CStringKey& strAddr, UShort usPort)
 {
 	if (krListen != nullptr) {
-		LOGV_INFO(m_FileLog, TF("[中心服务器]创建监听服务器连接[%s]:%d的连接已经存在"), *strAddr, usPort);
+		LOGV_INFO(m_FileLog, TF("[中心服务器]创建监听服务器对象[%s]:%d已经存在"), *strAddr, usPort);
 		return true;
 	}
 	bool bRet = true;
 	krListen = m_NetworkPtr->Create(*this, usPort, *strAddr);
 	if (krListen != nullptr) {
 		bRet = m_NetworkPtr->Listen(krListen);
-		LOGV_INFO(m_FileLog, TF("[中心服务器]创建监听服务器的连接[%s]:%d成功, %s"), *strAddr, usPort, bRet ? TF("监听连接成功") : TF("监听连接失败"));
+		LOGV_INFO(m_FileLog, TF("[中心服务器]创建监听服务器对象[%s]:%d成功, %s"), *strAddr, usPort, bRet ? TF("监听操作成功") : TF("监听操作失败"));
 	}
 	else {
-		LOGV_ERROR(m_FileLog, TF("[中心服务器]创建监听服务器的连接[%s]:%d失败"), *strAddr, usPort);
+		LOGV_ERROR(m_FileLog, TF("[中心服务器]创建监听服务器对象[%s]:%d失败"), *strAddr, usPort);
 		bRet = false;
 	}
 	return bRet;
@@ -203,13 +203,13 @@ bool CCenterServer::StartListenServer(KeyRef& krListen, const CStringKey& strAdd
 bool CCenterServer::Pause(bool bPause)
 {
 	if (bPause && (m_nStatus == STATUSC_RUN)) {
-		m_nStatus = STATUSC_PAUSE; // 不再接收服务器的连接
-		LOG_INFO(m_FileLog, TF("[中心服务器]暂停服务器的链接"));
+		m_nStatus = STATUSC_PAUSE;
+		LOG_INFO(m_FileLog, TF("[中心服务器]暂停服务器的连接"));
 		return true;
 	}
 	else if ((bPause == false) && (m_nStatus == STATUSC_PAUSE)) {
-		m_nStatus = STATUSC_RUN;   // 接收服务器的连接
-		LOG_INFO(m_FileLog, TF("[中心服务器]允许服务器的链接"));
+		m_nStatus = STATUSC_RUN;
+		LOG_INFO(m_FileLog, TF("[中心服务器]允许服务器的连接"));
 		return true;
 	}
 	return false;
@@ -238,27 +238,27 @@ void CCenterServer::Stop(void)
 		LOG_INFO(m_FileLog, TF("[中心服务器]中心服务停止完成!"));
 	}
 }
-// 停止监听服务器连接
+
 void CCenterServer::StopListenServers(void)
 {
 	if (m_krListenSelect != nullptr) {
 		m_NetworkPtr->Destroy(m_krListenSelect, false);
 		m_krListenSelect = nullptr;
-		LOG_INFO(m_FileLog, TF("[中心服务器]销毁监听选择服务器的连接成功"));
+		LOG_INFO(m_FileLog, TF("[中心服务器]销毁监听选择服务器对象成功"));
 	}
 	if (m_krListenLogin != nullptr) {
 		if (m_krListenLogin != (KeyRef)this) {
 			m_NetworkPtr->Destroy(m_krListenLogin, false);
 		}
 		m_krListenLogin = nullptr;
-		LOG_INFO(m_FileLog, TF("[中心服务器]销毁监听登陆服务器的连接成功"));
+		LOG_INFO(m_FileLog, TF("[中心服务器]销毁监听登陆服务器对象成功"));
 	}
 	if (m_krListenGame != nullptr) {
 		if (m_krListenGame != (KeyRef)this) {
 			m_NetworkPtr->Destroy(m_krListenGame, false);
 		}
 		m_krListenGame = nullptr;
-		LOG_INFO(m_FileLog, TF("[中心服务器]销毁监听游戏服务器的连接成功"));
+		LOG_INFO(m_FileLog, TF("[中心服务器]销毁监听游戏服务器对象成功"));
 	}
 }
 //--------------------------------------
@@ -275,7 +275,7 @@ bool CCenterServer::OnShareRoutine(Int nEvent, CEventBase& EventRef, LLong llPar
 			return OnShareUpdate(EventRef, llParam);
 		}
 		break;
-	//case PAK_EVENT_UNLINK: // 同进程服务器断连, 说明服务停止, 不需要处理
+	//case PAK_EVENT_UNLINK: // 同进程服务器注销, 说明服务停止, 不需要处理
 	//	break;
 	default:
 		{
@@ -285,7 +285,7 @@ bool CCenterServer::OnShareRoutine(Int nEvent, CEventBase& EventRef, LLong llPar
 	}
 	return false;
 }
-// 同进程服务器处理
+
 bool CCenterServer::OnShareLink(CEventBase& EventRef, LLong llParam)
 {
 	CPAKLink* pLink = static_cast<CPAKLink*>(&EventRef);
@@ -294,7 +294,7 @@ bool CCenterServer::OnShareLink(CEventBase& EventRef, LLong llParam)
 		if (m_pShareGameSvr == nullptr) {
 			// 0.获得共享指针
 			m_pShareGameSvr = reinterpret_cast<ICommonServer*>(llParam);
-			LOGV_INFO(m_FileLog, TF("[中心服务器]同进程游戏服务器[%p]连接"), m_pShareGameSvr);
+			LOGV_INFO(m_FileLog, TF("[中心服务器]同进程游戏服务器[%p]注册"), m_pShareGameSvr);
 			return ServerLink<SVR_GAME_MAP, DATA_INDEX_GAME, INFOI_GAME>(pLink, (DataRef)llParam, m_GameSvrMap);
 		}
 		else {
@@ -305,9 +305,9 @@ bool CCenterServer::OnShareLink(CEventBase& EventRef, LLong llParam)
 		if (m_pShareLoginSvr == nullptr) {
 			// 0.获得共享指针
 			m_pShareLoginSvr = reinterpret_cast<ICommonServer*>(llParam);
-			LOGV_INFO(m_FileLog, TF("[中心服务器]同进程登陆服务器[%p]连接"), m_pShareLoginSvr);
+			LOGV_INFO(m_FileLog, TF("[中心服务器]同进程登陆服务器[%p]注册"), m_pShareLoginSvr);
 			if (ServerLink<SVR_LOGIN_MAP, DATA_INDEX_LOGIN, INFOI_LOGIN>(pLink, (DataRef)llParam, m_LoginSvrMap)) {
-				// 3.刚连接的登陆服务器发送okay和sync状态的游戏服务器的全部信息
+				// 3.刚注册的登陆服务器发送okay和sync状态的游戏服务器信息
 				return SendGameServerInfo();
 			}		
 		}
@@ -319,9 +319,9 @@ bool CCenterServer::OnShareLink(CEventBase& EventRef, LLong llParam)
 		if (m_pShareSelectSvr == nullptr) {
 			// 0.获得共享指针
 			m_pShareSelectSvr = reinterpret_cast<ICommonServer*>(llParam);
-			LOGV_INFO(m_FileLog, TF("[中心服务器]同进程选择服务器[%p]连接"), m_pShareSelectSvr);
+			LOGV_INFO(m_FileLog, TF("[中心服务器]同进程选择服务器[%p]注册"), m_pShareSelectSvr);
 			if (ServerLink<SVR_SELECT_MAP, DATA_INDEX_SELECT, INFOI_SELECT>(pLink, (DataRef)llParam, m_SelectSvrMap)) {
-				// 3.刚连接的选择服务器发送okay和sync状态的登陆服务器的全部信息
+				// 3.刚注册的选择服务器发送okay和sync状态的登陆服务器信息
 				return SendLoginServerInfo();
 			}
 		}
@@ -331,7 +331,7 @@ bool CCenterServer::OnShareLink(CEventBase& EventRef, LLong llParam)
 		break;
 	default:
 		{
-			LOGV_WARN(m_FileLog, TF("[中心服务器]同进程服务器连接类型未知%X"), pLink->GetType());
+			LOGV_WARN(m_FileLog, TF("[中心服务器]同进程服务器类型未知%X"), pLink->GetType());
 		}
 	}
 	return false;
@@ -348,7 +348,7 @@ bool CCenterServer::OnShareUpdate(CEventBase& EventRef, LLong llParam)
 			return ServerUpdate<SVR_GAME_MAP, DATA_INDEX_GAME, INFOI_GAME>(pUpdate, (DataRef)llParam, m_GameSvrMap);
 		}
 		else {
-			LOGV_WARN(m_FileLog, TF("[中心服务器]同进程游戏服务器对象未连接"));
+			LOGV_WARN(m_FileLog, TF("[中心服务器]同进程游戏服务器对象未注册"));
 		}
 		break;
 	case PAK_TYPE_LOGIN:
@@ -358,7 +358,7 @@ bool CCenterServer::OnShareUpdate(CEventBase& EventRef, LLong llParam)
 			return ServerUpdate<SVR_LOGIN_MAP, DATA_INDEX_LOGIN, INFOI_LOGIN>(pUpdate, (DataRef)llParam, m_LoginSvrMap);
 		}
 		else {
-			LOGV_WARN(m_FileLog, TF("[中心服务器]同进程登陆服务器对象未连接"));
+			LOGV_WARN(m_FileLog, TF("[中心服务器]同进程登陆服务器对象未注册"));
 		}
 		break;
 	case PAK_TYPE_SELECT:
@@ -368,7 +368,7 @@ bool CCenterServer::OnShareUpdate(CEventBase& EventRef, LLong llParam)
 			return ServerUpdate<SVR_SELECT_MAP, DATA_INDEX_SELECT, INFOI_SELECT>(pUpdate, (DataRef)llParam, m_SelectSvrMap);
 		}
 		else {
-			LOGV_WARN(m_FileLog, TF("[中心服务器]同进程选择服务器对象未连接"));
+			LOGV_WARN(m_FileLog, TF("[中心服务器]同进程选择服务器对象未注册"));
 		}
 		break;
 	default:
@@ -417,22 +417,22 @@ bool CCenterServer::OnTcpDispatch(const PacketPtr& PktPtr, PTCP_PARAM pTcp)
 		break;
 	default:
 		{
-			LOGV_WARN(m_FileLog, TF("[中心服务器]%p连接信息无法识别的%X服务器信令包数据[event=%d]"), pTcp->krSocket, PktPtr->GetType(), PktPtr->GetEvent());
+			LOGV_WARN(m_FileLog, TF("[中心服务器]%p无法识别的%X服务器信令包数据[event=%d]"), pTcp->krSocket, PktPtr->GetType(), PktPtr->GetEvent());
 		}
 	}
 	return bRet;
 }
-// 服务器处理
+
 bool CCenterServer::OnServerLink(CPAKLink* pLink, KeyRef krSocket)
 {
 	switch (pLink->GetType()) {
 	case PAK_TYPE_GAME:
 		{
-			LOGV_INFO(m_FileLog, TF("[中心服务器]游戏服务器[%p]连接"), krSocket);
+			LOGV_INFO(m_FileLog, TF("[中心服务器]游戏服务器[%p]注册"), krSocket);
 			if (ServerLink<SVR_GAME_MAP, DATA_INDEX_GAME, INFOI_GAME>(pLink, (DataRef)krSocket, m_GameSvrMap)) {
-				// 3.设置连接为选择服务器属性
+				// 3.设置为游戏服务器类型
 				m_NetworkPtr->SetAttr(krSocket, PAK_TYPE_GAME);
-				// 4.发送连接回执包
+				// 4.发送注册回执包
 				CPAKSimple<PAK_EVENT_LINKACK, PAK_TYPE_CENTER> LinkAck;
 				LinkAck.AdjustSize();
 				return m_NetworkPtr->Send(krSocket, LinkAck);
@@ -441,37 +441,37 @@ bool CCenterServer::OnServerLink(CPAKLink* pLink, KeyRef krSocket)
 		break;
 	case PAK_TYPE_LOGIN:
 		{
-			LOGV_INFO(m_FileLog, TF("[中心服务器]登陆服务器[%p]连接"), krSocket);
+			LOGV_INFO(m_FileLog, TF("[中心服务器]登陆服务器[%p]注册"), krSocket);
 			if (ServerLink<SVR_LOGIN_MAP, DATA_INDEX_LOGIN, INFOI_LOGIN>(pLink, (DataRef)krSocket, m_LoginSvrMap)) {
-				// 3.设置连接为选择服务器属性
+				// 3.设置为登陆服务器类型
 				m_NetworkPtr->SetAttr(krSocket, PAK_TYPE_LOGIN_CENTER);
-				// 4.发送连接回执包
+				// 4.发送注册回执包
 				CPAKSimple<PAK_EVENT_LINKACK, PAK_TYPE_CENTER> LinkAck;
 				LinkAck.AdjustSize();
 				m_NetworkPtr->Send(krSocket, LinkAck);
-				// 5.刚连接的登陆服务器发送okay和sync状态的游戏服务器的全部信息
+				// 5.刚注册的登陆服务器发送okay和sync状态的游戏服务器信息
 				return SendGameServerInfo(krSocket);
 			}
 		}
 		break;
 	case PAK_TYPE_SELECT:
 		{
-			LOGV_INFO(m_FileLog, TF("[中心服务器]选择服务器[%p]连接"), krSocket);
+			LOGV_INFO(m_FileLog, TF("[中心服务器]选择服务器[%p]注册"), krSocket);
 			if (ServerLink<SVR_SELECT_MAP, DATA_INDEX_SELECT, INFOI_SELECT>(pLink, (DataRef)krSocket, m_SelectSvrMap)) {
-				// 3.设置连接为选择服务器属性
+				// 3.设置为选择服务器类型
 				m_NetworkPtr->SetAttr(krSocket, PAK_TYPE_SELECT);
-				// 4.发送连接回执包
+				// 4.发送注册回执包
 				CPAKSimple<PAK_EVENT_LINKACK, PAK_TYPE_CENTER> LinkAck;
 				LinkAck.AdjustSize();
 				m_NetworkPtr->Send(krSocket, LinkAck);
-				// 5.刚连接的选择服务器发送okay和sync状态的登陆服务器的全部信息
+				// 5.刚注册的选择服务器发送okay和sync状态的登陆服务器信息
 				return SendLoginServerInfo(krSocket);
 			}
 		}
 		break;
 	default:
 		{
-			LOGV_WARN(m_FileLog, TF("[中心服务器]%p连接信息无法识别的%X服务器信令包数据"), krSocket, pLink->GetType());
+			LOGV_WARN(m_FileLog, TF("[中心服务器]%p注册信息无法识别的%X服务器信令包数据"), krSocket, pLink->GetType());
 		}
 	}
 	return false;
@@ -519,31 +519,31 @@ bool CCenterServer::OnServerUnlink(CPAKHead* pUnlink, KeyRef krSocket)
 	switch (pUnlink->GetType()) {
 	case PAK_TYPE_GAME:
 		{
-			LOGV_INFO(m_FileLog, TF("[中心服务器]游戏服务器[%p]断接"), krSocket);
+			LOGV_INFO(m_FileLog, TF("[中心服务器]游戏服务器[%p]注销"), krSocket);
 			bRet = ServerUnlink<SVR_GAME_MAP, DATA_INDEX_GAME, INFOI_GAME>(krSocket, m_GameSvrMap);
 		}
 		break;
 	case PAK_TYPE_LOGIN:
 		{
-			LOGV_INFO(m_FileLog, TF("[中心服务器]登陆服务器[%p]断接"), krSocket);
+			LOGV_INFO(m_FileLog, TF("[中心服务器]登陆服务器[%p]注销"), krSocket);
 			bRet = ServerUnlink<SVR_LOGIN_MAP, DATA_INDEX_LOGIN, INFOI_LOGIN>(krSocket, m_LoginSvrMap);
 		}
 		break;
 	case PAK_TYPE_SELECT:
 		{
-			LOGV_INFO(m_FileLog, TF("[中心服务器]选择服务器[%p]断接"), krSocket);
+			LOGV_INFO(m_FileLog, TF("[中心服务器]选择服务器[%p]注销"), krSocket);
 			bRet = ServerUnlink<SVR_SELECT_MAP, DATA_INDEX_SELECT, INFOI_SELECT>(krSocket, m_SelectSvrMap);
 		}
 		break;
 	default:
 		{
-			LOGV_WARN(m_FileLog, TF("[中心服务器]%p断连信息无法识别的%X服务器信令包数据"), krSocket, pUnlink->GetType());
+			LOGV_WARN(m_FileLog, TF("[中心服务器]%p注销信息无法识别的%X服务器信令包数据"), krSocket, pUnlink->GetType());
 		}
 	}
 	if (bRet) {
-		// 3.设置连接为无效服务器属性
+		// 3.设置为无效服务器类型
 		m_NetworkPtr->SetAttr(krSocket, PAK_TYPE_NONE);
-		// 4.发送断连回执包
+		// 4.发送注销回执包
 		CPAKSimple<PAK_EVENT_UNLINKACK, PAK_TYPE_CENTER> UnlinkAck;
 		UnlinkAck.AdjustSize();
 		m_NetworkPtr->Send(krSocket, UnlinkAck);
@@ -572,31 +572,37 @@ bool CCenterServer::OnTcpClose(KeyRef krSocket, LLong llLiveData)
 {
 	if (krSocket == m_krListenGame) {
 		m_krListenGame = nullptr;
-		DEV_INFO(TF("[中心服务器]监听游戏服务器连接关闭"));
+		DEV_INFO(TF("[中心服务器]监听游戏服务器对象关闭"));
+		LOG_INFO(m_FileLog, TF("[中心服务器]监听游戏服务器对象关闭"));
 	}
 	else if (krSocket == m_krListenLogin) {
 		m_krListenLogin = nullptr;
-		DEV_INFO(TF("[中心服务器]监听登陆服务器连接关闭"));
+		DEV_INFO(TF("[中心服务器]监听登陆服务器对象关闭"));
+		LOG_INFO(m_FileLog, TF("[中心服务器]监听登陆服务器对象关闭"));
 	}
 	else if (krSocket == m_krListenSelect) {
 		m_krListenSelect = nullptr;
-		DEV_INFO(TF("[中心服务器]监听选择服务器关闭"));
+		DEV_INFO(TF("[中心服务器]监听选择服务器对象关闭"));
+		LOG_INFO(m_FileLog, TF("[中心服务器]监听选择服务器对象关闭"));
 	}
-	else { // 单个服务器断连/断开
+	else { // 单个服务器断开
 		switch (llLiveData) {
 		case PAK_TYPE_GAME:
 			{
 				ServerUnlink<SVR_GAME_MAP, DATA_INDEX_GAME, INFOI_GAME>(krSocket, m_GameSvrMap);
+				LOGV_INFO(m_FileLog, TF("[中心服务器]游戏服务器[%p]断开"), krSocket);
 			}
 			break;
 		case PAK_TYPE_LOGIN_CENTER:
 			{
 				ServerUnlink<SVR_LOGIN_MAP, DATA_INDEX_LOGIN, INFOI_LOGIN>(krSocket, m_LoginSvrMap);
+				LOGV_INFO(m_FileLog, TF("[中心服务器]登陆服务器[%p]断开"), krSocket);
 			}
 			break;
 		case PAK_TYPE_SELECT:
 			{
 				ServerUnlink<SVR_SELECT_MAP, DATA_INDEX_SELECT, INFOI_SELECT>(krSocket, m_SelectSvrMap);
+				LOGV_INFO(m_FileLog, TF("[中心服务器]选择服务器[%p]断开"), krSocket);
 			}
 			break;
 		default:
@@ -608,12 +614,11 @@ bool CCenterServer::OnTcpClose(KeyRef krSocket, LLong llLiveData)
 	return true;
 }
 //--------------------------------------
-// 定时检测监听服务器连接的连接对象是否有效
 bool CCenterServer::CheckListenServers(void)
 {
 	return (CheckListenSelectServer() && CheckListenLoginServer() && CheckListenGameServer());
 }
-// 定时检测监听选择服务器连接的连接对象是否有效
+
 bool CCenterServer::CheckListenSelectServer(void)
 {
 	if (m_krListenSelect == nullptr){
@@ -626,7 +631,7 @@ bool CCenterServer::CheckListenSelectServer(void)
 	}
 	return true;
 }
-// 定时检测监听登陆服务器连接的连接对象是否有效
+
 bool CCenterServer::CheckListenLoginServer(void)
 {
 	if (m_krListenLogin == nullptr){
@@ -639,7 +644,7 @@ bool CCenterServer::CheckListenLoginServer(void)
 	}
 	return true;
 }
-// 定时检测监听游戏服务器连接的连接对象是否有效
+
 bool CCenterServer::CheckListenGameServer(void)
 {
 	if (m_krListenGame == nullptr){
@@ -652,7 +657,7 @@ bool CCenterServer::CheckListenGameServer(void)
 	}
 	return true;
 }
-// 同步服务器信息给
+
 bool CCenterServer::SyncServersInfo(void)
 {
 	SyncCenterServerInfo();
@@ -701,7 +706,7 @@ bool CCenterServer::SyncLoginServerInfo(void)
 				}
 				if (m_NetworkPtr->Send(nullptr, *StreamPtr, SEND_BROADCAST_AS, PAK_TYPE_SELECT)) { // 广播到所有选择服务器
 					CSyncLockWaitScope scope(m_LoginSvrMap.GetLock());
-					m_LoginSvrMap.Update(); // 同步完成, 更新状态和清除断连的数据
+					m_LoginSvrMap.Update();
 					m_ServerInfo[INFOI_LOGIN].usStatus = STATUSU_OKAY;
 				}
 			}
@@ -736,12 +741,9 @@ bool CCenterServer::SyncGameServerInfo(void)
 				}
 				if (m_NetworkPtr->Send(nullptr, *StreamPtr, SEND_BROADCAST_AS, PAK_TYPE_LOGIN_CENTER)) { // 广播到所有登陆服务器
 					CSyncLockWaitScope scope(m_GameSvrMap.GetLock());
-					m_GameSvrMap.Update(); // 同步完成, 更新状态和清除断连的数据
+					m_GameSvrMap.Update();
 					m_ServerInfo[INFOI_GAME].usStatus = STATUSU_OKAY;
 				}
-			}
-			else {
-				DEV_INFO(TF("[中心服务器]同步游戏服务器信息给登陆服务器发现没有同步数据2"));
 			}
 			return m_pUIHandler->OnHandle(PAK_EVENT_SYNC, reinterpret_cast<uintptr_t>(m_ServerInfo + INFOI_GAME), DATA_INDEX_GAME);
 		}

@@ -5,8 +5,8 @@
 //   Header File : SelectDlg.h                                  //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
-//   Detail : 选择服务器管理界面对话框                            //
+//   Update : 2015-11-25     version 0.0.0.5                    //
+//   Detail : 选择服务器界面对话框                               //
 //                                                              //
 //////////////////////////////////////////////////////////////////
 
@@ -18,7 +18,7 @@
 #include "CommonDlg.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CSelectDlg
+/// 选择服务器界面对话框
 class CSelectDlg : public CCommonDlg
 {
 public:
@@ -48,10 +48,10 @@ private:
 
 	virtual CXListView* GetListView(Int nServerIndex) OVERRIDE;
 private:
-	UInt         m_uSelectAll;   // 总共连接过的客户端数量
-	UInt         m_uLoginCount;  // 连接的登陆服务器数量
-	UInt         m_uLoginOnline; // 登陆服务器连接客户端当前在线数量
-	UInt         m_uLoginAll;    // 登陆服务器连接客户端总数量
+	UInt         m_uSelectAll;  
+	UInt         m_uLoginCount; 
+	UInt         m_uLoginOnline;
+	UInt         m_uLoginAll;   
 	CXStatic     m_ConnectCenter;
 	CXStatic     m_UDPService;
 	CXStatic     m_ServerInfo;

@@ -107,29 +107,29 @@ public:
 };
 typedef CTRefCountPtr<CXUIManager> CXUIManagerPtr;
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CXUIKitRender
-DECLARE_UUID(CXUIKitRender, {1BE479F7-D3A1-4238-A2DD-1206930B19BE})
-class NOVTABLE CXUIKitRender ABSTRACT : public CComponent
-{
-public:
-	virtual UInt     Init(void) PURE_METHOD;
-	virtual void     Exit(void) PURE_METHOD;
-
-	virtual bool     RenderColor(HDC hDC, COLORREF crColor, const RECT& rt, bool bAlpha = false, Byte bSCA = 255) PURE_METHOD;
-	virtual bool     RenderGradient(HDC hDC, COLORREF crColor1, COLORREF crColor2, Int nType, const RECT& rt, bool bAlpha = false, Byte bSCA = 255) PURE_METHOD;
-	virtual bool     RenderImage(HDC hDC, PINDEX index, const RECT& rt, Int nState, bool bAlpha = false, Byte bSCA = 255) PURE_METHOD;
-	virtual bool     RenderImage(HDC hDC, HBITMAP hBitmap, const RECT& rt, Int nState, bool bAlpha= false, Byte bSCA = 255) PURE_METHOD;
-
-	virtual PINDEX   AddImage(PCXStr pszName, PCXStr pszTag, COLORREF crMask = 0) PURE_METHOD;
-	virtual PINDEX   AddImage(Int nId, COLORREF crMask = 0) PURE_METHOD;
-	virtual bool     RemoveImage(PINDEX index) PURE_METHOD;
-
-	virtual bool     LoadResource(PCXStr pszFile) PURE_METHOD;
-	virtual void     SetResHandle(LibRef lrResInst, bool bUnload = false) PURE_METHOD;
-	virtual LibRef   GetResHandle(void) PURE_METHOD;
-};
-typedef CTRefCountPtr<CXUIKitRender> CXUIKitRenderPtr;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//// CXUIKitRender
+//DECLARE_UUID(CXUIKitRender, {1BE479F7-D3A1-4238-A2DD-1206930B19BE})
+//class NOVTABLE CXUIKitRender ABSTRACT : public CComponent
+//{
+//public:
+//	virtual UInt     Init(void) PURE_METHOD;
+//	virtual void     Exit(void) PURE_METHOD;
+//
+//	virtual bool     RenderColor(HDC hDC, COLORREF crColor, const RECT& rt, bool bAlpha = false, Byte bSCA = 255) PURE_METHOD;
+//	virtual bool     RenderGradient(HDC hDC, COLORREF crColor1, COLORREF crColor2, Int nType, const RECT& rt, bool bAlpha = false, Byte bSCA = 255) PURE_METHOD;
+//	virtual bool     RenderImage(HDC hDC, PINDEX index, const RECT& rt, Int nState, bool bAlpha = false, Byte bSCA = 255) PURE_METHOD;
+//	virtual bool     RenderImage(HDC hDC, HBITMAP hBitmap, const RECT& rt, Int nState, bool bAlpha= false, Byte bSCA = 255) PURE_METHOD;
+//
+//	virtual PINDEX   AddImage(PCXStr pszName, PCXStr pszTag, COLORREF crMask = 0) PURE_METHOD;
+//	virtual PINDEX   AddImage(Int nId, COLORREF crMask = 0) PURE_METHOD;
+//	virtual bool     RemoveImage(PINDEX index) PURE_METHOD;
+//
+//	virtual bool     LoadResource(PCXStr pszFile) PURE_METHOD;
+//	virtual void     SetResHandle(LibRef lrResInst, bool bUnload = false) PURE_METHOD;
+//	virtual LibRef   GetResHandle(void) PURE_METHOD;
+//};
+//typedef CTRefCountPtr<CXUIKitRender> CXUIKitRenderPtr;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CXUISystem : CSubSystem

@@ -5,15 +5,14 @@
 //   Source File : GateDlg.cpp                                  //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
-//   Detail : 网关服务器管理界面对话框                            //
+//   Update : 2015-11-25     version 0.0.0.5                    //
+//   Detail : 网关服务器界面对话框                               //
 //                                                              //
 //////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "resource.h"
 #include "network.h"
-#include "servermap.h"
 #include "ServerLoader.h"
 #include "GateDlg.h"
 
@@ -32,6 +31,7 @@ CGateDlg::CGateDlg(void)
 : m_uGateOnline(0)
 , m_uGateAll(0)
 , m_uGateBusy(0)
+, m_uGameId(0)
 , m_uQueueUsers(0)
 , m_uSelectUsers(0)
 , m_uPlayUsers(0)
@@ -188,9 +188,10 @@ void CGateDlg::OnSync(Int nServerIndex, uintptr_t utParam)
 	}
 	else {
 		PUInt p = reinterpret_cast<PUInt>(utParam);
-		m_uQueueUsers  = p[0];
-		m_uSelectUsers = p[1];
-		m_uPlayUsers   = p[2];
+		m_uGameId      = p[0];
+		m_uQueueUsers  = p[1];
+		m_uSelectUsers = p[2];
+		m_uPlayUsers   = p[3];
 	}
 }
 
@@ -219,7 +220,7 @@ void CGateDlg::UpdateServerInfo(void)
 	strInfo.Load(IDC_GATE_INFO);
 
 	CStringFix strTemp;
-	strTemp.Format(*strInfo, m_uGateOnline, m_uGateAll, m_uGateBusy, m_uQueueUsers, m_uSelectUsers, m_uPlayUsers);
+	strTemp.Format(*strInfo, m_uGateOnline, m_uGateAll, m_uGateBusy, m_uGameId, m_uQueueUsers, m_uSelectUsers, m_uPlayUsers);
 	m_ServerInfo.SetWindowText(*strTemp);
 }
 

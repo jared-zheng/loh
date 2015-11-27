@@ -5,12 +5,13 @@
 //   Source File : GateRoutine.cpp                              //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
+//   Update : 2015-11-25     version 0.0.0.5                    //
 //   Detail : 网关服务器事务实现                                 //
 //                                                              //
 //////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
+#include "timescope.h"
 #include "GateServerImp.h"
 #include "GateRoutine.h"
 
@@ -38,7 +39,7 @@ bool CGateRoutine::OnHandle(Int nEvent, uintptr_t utParam, LLong llParam)
 		return (CheckAddrBlacklist(*pAddr) == false);
 	}
 	else if (nEvent == PAK_EVENT_UNLINK) {
-		// 客户端断连, 通知游戏服务器保存角色数据
+		// 客户端断开, 通知游戏服务器保存角色数据
 		utParam; // session-id
 		llParam; // queue & select just remove user info
 	}
@@ -134,7 +135,7 @@ bool CGateRoutine::Update(void)
 {
 	CheckSessionTimeout();
 
-	UInt uStat[3] = { (UInt)(m_nQueueEnd - m_nQueueCur), (UInt)m_nGameSelect, (UInt)(m_nGameCur - m_nGameSelect) };
+	UInt uStat[4] = { (UInt)m_pServer->GetGameId(), (UInt)(m_nQueueEnd - m_nQueueCur), (UInt)m_nGameSelect, (UInt)(m_nGameCur - m_nGameSelect) };
 	m_pServer->GetUIHandler()->OnHandle(PAK_EVENT_SYNC, reinterpret_cast<uintptr_t>(uStat), DATA_INDEX_MAX);
 	return true;
 }
@@ -238,6 +239,7 @@ void CGateRoutine::SelectGame(CPAKLoginSelectGame* pSelect, LLong llParam)
 			m_SessionLogin.Add((DataRef)pSelect->GetSessionId(), LoginData);
 		}
 		pSelect->SetAddr(m_pServer->GetGateAddr().NetAddr[GATEI_TCP]);
+		pSelect->SetAuthCode(m_pServer->GetGameId());
 		pSelect->SetAck(DATAD_OKAY);
 	}
 	else {
@@ -331,7 +333,9 @@ void CGateRoutine::LinkGame2(LLong llDataRef, CPAKLoginLinkGame* pLink, KeyRef k
 	}
 	if (Data.llUserId == pLink->GetSessionId()) {
 		Data.llTimeout = CPlatform::GetRunningTime();
-		Data.llOnline  = Data.llTimeout;
+
+		CTime time;
+		Data.llOnline  = time.GetTime();
 
 		if (m_nGameCur < m_nGameLimit) { // 直接加入游戏队列
 			CAtomics::Increment<UInt>((PUInt)&m_nGameCur);
@@ -351,7 +355,7 @@ void CGateRoutine::LinkGame2(LLong llDataRef, CPAKLoginLinkGame* pLink, KeyRef k
 			}
 			++m_nQueueEnd;
 			nQueue       = m_nQueueEnd;
-			Data.nData   = m_nQueueEnd;
+			Data.nParam  = m_nQueueEnd;
 			Data.nStatus = SESSION_DATA::SESSION_STATUS_QUEUE;
 			{
 				CSyncLockWaitScope scope(m_SessionQueue.GetLock());
@@ -396,7 +400,7 @@ void CGateRoutine::QueueRank(CPAKSession* pQueue, KeyRef krSocket)
 			pPair->m_V.llTimeout = CPlatform::GetRunningTime();
 			if (pQueue->GetSessionId() == pPair->m_V.llUserId) {
 				uAck   = DATAD_OKAY;
-				nParam = pPair->m_V.nData - m_nQueueCur;
+				nParam = pPair->m_V.nParam - m_nQueueCur;
 			}
 			else {
 				uAck = GATE_ERROR_SESSION;
@@ -451,6 +455,7 @@ void CGateRoutine::SelectRole(CPAKGateSelect* pSelect, KeyRef krSocket)
 	}
 	if (uAck == DATAD_OKAY) { // 向游戏DB服务器发送请求角色信息
 		pSelect->SetSessionId((LLong)krSocket);
+		pSelect->SetGameId(m_pServer->GetGameId());
 		ICommonServer* pGameDBServer = m_pServer->GetShareGameDBServer();
 		if (pGameDBServer != nullptr) {
 			pGameDBServer->OnShareRoutine(PAK_EVENT_GATE_SELECT, *pSelect);
@@ -479,12 +484,9 @@ void CGateRoutine::PlayRole(CPAKGatePlay* pPlay, KeyRef krSocket)
 			if (pPair->m_V.llUserId != pPlay->GetSessionId()) {
 				uAck  = GATE_ERROR_SESSION;
 			}
-			else if (pPair->m_V.llUserId != pPlay->GetUserId()) {
-				uAck  = GATE_ERROR_USERID;
-			}
 			else if (pPair->m_V.nStatus == SESSION_DATA::SESSION_STATUS_SELECTACK) {
 				pPair->m_V.nStatus = SESSION_DATA::SESSION_STATUS_PLAY;
-				pPair->m_V.nData   = pPlay->GetRoleId();
+				pPair->m_V.nParam  = pPlay->GetRoleId();
 				uAck   = DATAD_OKAY;
 			}
 		}

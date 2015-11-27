@@ -5,7 +5,7 @@
 //   Header File : TestLaunch.h                                 //
 //   Author : jaredz@outlook.com                                //
 //   Create : 2012-12-01     version 0.0.0.1                    //
-//   Update :                                                   //
+//   Update : 2015-11-25     version 0.0.0.5                    //
 //   Detail : 测试客户端                                         //
 //                                                              //
 //////////////////////////////////////////////////////////////////
@@ -26,7 +26,7 @@
 #include "servermap.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CTestSystem
+/// 测试客户端子系统加载器
 class CTestSystem : public MObject
 {
 	DECLARE_CLASS_LOADER( CTestSystem, XUI )
@@ -44,7 +44,7 @@ public:
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CTestSystemSingleton
+/// 测试客户端子系统加载器单件
 class CTestSystemSingleton : public CTSingletonInst<CTestSystem>
 {
 private:
@@ -57,7 +57,7 @@ typedef CTestSystemSingleton GTestSystem;
 #define GTestSystemInst      CTestSystemSingleton::GetInstance()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CTestView
+/// 测试客户端视图
 class CTestView : public CXView
 {
 protected:
@@ -69,7 +69,7 @@ protected:
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CTestLoginDlg
+/// 测试客户端登陆对话框
 class CTestLoginDlg : public CXDlg
 {
 public:
@@ -97,16 +97,19 @@ private:
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CTestSelGameDlg
+/// 测试客户端游戏服务器对话框
 class CTestSelGameDlg : public CXDlg
 {
 public:
 	CTestSelGameDlg(void);
 	~CTestSelGameDlg(void);
-
+	/// 登陆成功返回的游戏服务器信息
+	/// @param[in] CPAKLoginLinkAck* pLinkAck 登陆成功返回的数据包
 	void   LinkAck(CPAKLoginLinkAck* pLinkAck);
+	/// 同步游戏服务器信息
+	/// @param[in] CLoginSync* pSync 同步数据包
 	void   Sync(CLoginSync* pSync);
-
+	/// 获得用户选择的游戏服务器索引值
 	LLong  GetGameKey(void) { return m_llGameKey;  }
 
 	DECLARE_DLG_ID_WND_EXCHANGE( CTestSelGameDlg )
@@ -133,26 +136,27 @@ public:
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CTestMainFrame
+/// 测试客户端主窗口
 class CTestMainFrame : public CXFrameWnd, public CPAKHandler
 {
 public:
+	/// 主窗口常量
 	enum FRAME_CONST
 	{
-		FRAMEC_RETRYCOUNT  = 3,
+		FRAMEC_RETRYCOUNT  = 3,     ///< 最多尝试次数
 
-		FRAMEC_TICK_ID     = 1000,
-		FRAMEC_TICK_TIME   = 30000,
+		FRAMEC_TICK_ID     = 1000,  ///< UDP获取登录服务器地址最长等待时间的定时Id
+		FRAMEC_TICK_TIME   = 30000, ///< UDP获取登录服务器地址最长等待时间
 
-		FRAMEC_SELECTPORT  = 10010,
+		FRAMEC_SELECTPORT  = 10010, ///< 选择服务器默认端口
 
-		FRAMEC_WIDTH       = 800,
-		FRAMEC_HEIGHT      = 600,
-		FRAMEC_LIST_HEIGHT = 200,
+		FRAMEC_WIDTH       = 800,   ///< 主窗口默认宽度
+		FRAMEC_HEIGHT      = 600,   ///< 主窗口默认高度
+		FRAMEC_LIST_HEIGHT = 200,   ///< 主窗口日志窗口高度
 
-		FRAMEC_TRAITS      = WS_OVERLAPPED|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX,
+		FRAMEC_TRAITS      = WS_OVERLAPPED|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX, ///< ///< 主窗口属性
 	};
-
+	/// 主窗口游戏状态
 	enum FRAME_STATE
 	{
 		FRAME_STATE_NONE = 0,
@@ -167,7 +171,7 @@ public:
 		FRAME_STATE_PLAYGAME,
 		FRAME_STATE_EXIT,
 	};
-
+	/// 主窗口游戏状态对应的自定义消息
 	enum FRAME_MSG
 	{
 		FRAME_MSG_SELECT = WM_USER + 0x200,

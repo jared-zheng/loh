@@ -222,6 +222,10 @@ INLINE CString CTimeScope::Format(PCXStr pszFormat) const
 INLINE CTime::CTime(void)
 : m_llTime(0)
 {
+	CPlatform::TIMEINFO ti;
+	CPlatform::GetTimeInfo(ti);
+	CTime timeT((Int)ti.usYear, (Int)ti.usMonth, (Int)ti.usDay, (Int)ti.usHour, (Int)ti.usMinute, (Int)ti.usSecond);
+	m_llTime = timeT.m_llTime;
 }
 
 INLINE CTime::~CTime(void)
